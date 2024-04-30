@@ -7,6 +7,9 @@ using UnityEngine.Windows;
 [RequireComponent(typeof(Rigidbody))]
 public class B_Player : MonoBehaviour
 {
+    //I use a lot of regions :)
+    //Ctrl + M + L to uncollapse them all
+
     #region Variables
 
     #region Serialized Varibales
@@ -25,13 +28,13 @@ public class B_Player : MonoBehaviour
 
     [Header("Locomotion Parameters")]
     [Tooltip("Defines the movement speed of the entity in m/s")]
-    [SerializeField] float MovementSpeed = 5.0f;
+    [SerializeField] float MovementSpeed = 7.0f;
     [Tooltip("Defines how long the entity should take under ideal conditions to accelerate to their movement speed from rest.")]
-    [SerializeField] float MovementAcceleration = 1.0f;
+    [SerializeField] float MovementAcceleration = 100.0f;
 
     [Header("Crouching Parameters")]
     [SerializeField] float CrouchedHeight = 1.0f;
-    [SerializeField] float CrouchedSpeedScalar = 0.5f;
+    [SerializeField] float CrouchedSpeedScalar = 0.75f;
 
     [Header("Resistant Forces")]
     [SerializeField] float GroundDrag = 1.0f;
@@ -161,6 +164,7 @@ public class B_Player : MonoBehaviour
 
     public void Jump(InputAction.CallbackContext context)
     {
+        if (context.phase != InputActionPhase.Performed) return;
         if (_isGrounded)
         {
             //Debug.Log("Jumping");
@@ -172,6 +176,7 @@ public class B_Player : MonoBehaviour
 
     public void Crouch(InputAction.CallbackContext context)
     {
+        if (context.phase != InputActionPhase.Performed) return;
         if (_isCrouched)
         {
             _isCrouched = false;
@@ -181,17 +186,20 @@ public class B_Player : MonoBehaviour
         {
             _isCrouched = true;
             _capsuleCollider.height = CrouchedHeight;
+            transform.Translate(Vector3.down * CrouchedHeight / 2);
         }
     }
 
     public void Sprint(InputAction.CallbackContext context)
     {
-        throw new System.NotImplementedException;
+        if (context.phase != InputActionPhase.Performed) return;
+        throw new System.NotImplementedException();
     }
 
     public void Interact(InputAction.CallbackContext context)
     {
-
+        if (context.phase != InputActionPhase.Performed) return;
+        throw new System.NotImplementedException();
     }
     #endregion
 
@@ -205,6 +213,11 @@ public class B_Player : MonoBehaviour
     {
         _lookInput = context.ReadValue<Vector2>();
     }
+
+    public void onLean(InputAction.CallbackContext context)
+    {
+        throw new System.NotImplementedException();
+    }
     #endregion
 
     #region Internal Use Functions
@@ -213,7 +226,7 @@ public class B_Player : MonoBehaviour
     {
         _isGrounded = Physics.Raycast(transform.position, transform.TransformDirection(Vector3.down), _capsuleCollider.height / 2 + GroundCheckAdditionalDistance);
         SetGrounded();
-        Debug.Log(_isGrounded);
+        //Debug.Log(_isGrounded);
     }
 
     void SetGrounded()
