@@ -256,7 +256,7 @@ MonoBehaviour:
   MovementAcceleration: 100
   CrouchedHeight: 1
   CrouchedSpeedScalar: 0.75
-  GroundDrag: 10
+  GroundDrag: 6
   AirDrag: 0
   AirControlScalar: 0.1
   LookAngleClamp: 80

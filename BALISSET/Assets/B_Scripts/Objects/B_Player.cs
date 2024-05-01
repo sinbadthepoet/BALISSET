@@ -5,31 +5,37 @@ using UnityEngine.InputSystem;
 using UnityEngine.Windows;
 
 [RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(CapsuleCollider))]
 public class B_Player : MonoBehaviour
 {
-    //I use a lot of regions :)
-    //Ctrl + M + L to uncollapse them all
+    //This file makes heavy use of Regions.
+    //Helpful for organization, but sometimes you want to view everything at once.
+    //In Visual Studio, Ctrl + M + L uncollapses all regions and any other sections.
 
     #region Variables
 
-    #region Serialized Varibales
+    #region Editor Variables
 
     ////////////////////////
     //**EDITOR VARIABLES**//
     ////////////////////////
 
+    //These should be assigned automatically.
+    //If you add more, grab the references OnReset();
     [Header("Object References")]
+    [Tooltip("The player's first person camera.")]
     [SerializeField] Camera _camera;
     [SerializeField] Rigidbody _rb;
+    [Tooltip("A reference to the player collider. Used in this script for crouching.")]
     [SerializeField] CapsuleCollider _capsuleCollider;
 
     [Header("Player Size")]
     [SerializeField] float StandingHeight = 2.0f;
 
     [Header("Locomotion Parameters")]
-    [Tooltip("Defines the movement speed of the entity in m/s")]
+    [Tooltip("Defines the maximum running speed of the entity in m/s.")]
     [SerializeField] float MovementSpeed = 7.0f;
-    [Tooltip("Defines how long the entity should take under ideal conditions to accelerate to their movement speed from rest.")]
+    [Tooltip("An arbitrary unit defining the strength of acceleration in movement.")]
     [SerializeField] float MovementAcceleration = 100.0f;
 
     [Header("Crouching Parameters")]
@@ -39,13 +45,15 @@ public class B_Player : MonoBehaviour
     [Header("Resistant Forces")]
     [SerializeField] float GroundDrag = 1.0f;
     [SerializeField] float AirDrag = 0.0f;
-    [SerializeField] float AirControlScalar = 1.0f;
+    [Tooltip("Scales movement input forces while player is in the air.")]
+    [SerializeField] float AirControlScalar = 0.1f;
 
     [Header("Camera Parameters")]
     [SerializeField] float LookAngleClamp = 80.0f;
 
     [Header("Jump Parameters")]
-    [SerializeField] float JumpForce = 1000f; //Ideally, we change this to have users define height and the game figures out the necessary force.
+    [SerializeField] float JumpForce = 500f; //Ideally, we change this to have users define height and the game figures out the necessary force.
+    [Tooltip("How far past the bottom of the collider are we checking for ground?")]
     [SerializeField] float GroundCheckAdditionalDistance = 0.1f;
 
     #endregion
@@ -56,14 +64,17 @@ public class B_Player : MonoBehaviour
     //**INTERNAL VARIABLES**//
     //////////////////////////
     
+    //Tracked Values
     float _verticalLook;
 
     //States
+    //Eventually, this component will be moved to a state pattern.
     bool _isGrounded;
     bool _isMoving;
     bool _isCrouched;
 
     //Derived Values
+    //We convert editor parameters into the required value in OnValidate();
     float _movementForce;
 
     #endregion
@@ -74,8 +85,10 @@ public class B_Player : MonoBehaviour
     //**INPUT VARIABLES**//
     ///////////////////////
 
+    //These store controller values so we can use them without requiring an event callback.
     Vector2 _movementInput;
     Vector2 _lookInput;
+    float _leanInput;
 
     #endregion
 
@@ -84,6 +97,11 @@ public class B_Player : MonoBehaviour
     #region Functions
 
     #region Built In Functions
+
+    //////////////////////////
+    //**BUILT IN FUNCTIONS**//
+    //////////////////////////
+    
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
@@ -102,7 +120,7 @@ public class B_Player : MonoBehaviour
 
     void Reset()
     {
-        _camera = transform.Find("Camera").GetComponent<Camera>();
+        _camera = FindObjectOfType<Camera>();
         _rb = GetComponent<Rigidbody>();
         _capsuleCollider = GetComponent<CapsuleCollider>();
     }
@@ -110,8 +128,6 @@ public class B_Player : MonoBehaviour
     void OnValidate()
     {
         _movementForce = _rb.mass * MovementAcceleration;
-        Debug.Log("Set Movement Force to " + _movementForce);
-
         _capsuleCollider.height = StandingHeight;
     }
 
@@ -119,15 +135,19 @@ public class B_Player : MonoBehaviour
 
     #region Action Functions
 
-    /// <summary>
-    /// This function sucks dick and I hope we replace it.
-    /// </summary>
+    ////////////////////////
+    //**ACTION FUNCTIONS**//
+    ////////////////////////
+
+    // This function mostly sucks dick and I hope we replace it.
     void Movement()
     {
         _isMoving = _movementInput.magnitude > 0;
 
-        Vector3 MovementForce = new Vector3(_movementInput.x, 0, _movementInput.y) * _movementForce * 1;// Time.fixedDeltaTime;
+        //Create the desired force vector in local space.
+        Vector3 MovementForce = new Vector3(_movementInput.x, 0, _movementInput.y) * _movementForce;
 
+        //Scale force based on circumstances.
         if (!_isGrounded)
         {
             MovementForce *= AirControlScalar;
@@ -137,8 +157,11 @@ public class B_Player : MonoBehaviour
             MovementForce *= CrouchedSpeedScalar; //Eventually, we should modify the _movementForce as we switch back and forth between states.
         }
 
+        //Add force in local space.
         _rb.AddRelativeForce(MovementForce, ForceMode.Force);
 
+        //Check the horizontal plane's velocity and limit it to the movement speed if it's too fast.
+        //This sucks because we can't shoot the player super fast out of a canon.
         Vector3 PlanarVelocity = new Vector3(_rb.velocity.x, 0, _rb.velocity.z);
 
         if(PlanarVelocity.magnitude > MovementSpeed) 
@@ -147,8 +170,6 @@ public class B_Player : MonoBehaviour
             Vector3 CappedVelocity = new Vector3(PlanarVelocity.x, _rb.velocity.y, PlanarVelocity.z);
             _rb.velocity = CappedVelocity;
         }
-
-        //Debug.Log("Player Velocity: " + _rb.velocity.magnitude);
     }
 
     void Look()
@@ -162,12 +183,14 @@ public class B_Player : MonoBehaviour
         _camera.transform.localRotation = Quaternion.Euler(_verticalLook, 0, 0);
     }
 
+    //Using Unity Events in Input 1.7 calls these events multiple times for each phase.
+    //We are manually filtering out the phases we don't need.
+
     public void Jump(InputAction.CallbackContext context)
     {
         if (context.phase != InputActionPhase.Performed) return;
         if (_isGrounded)
         {
-            //Debug.Log("Jumping");
             _rb.AddRelativeForce(Vector3.up * JumpForce, ForceMode.Impulse);
             _isGrounded = false;
             SetGrounded();
@@ -201,9 +224,17 @@ public class B_Player : MonoBehaviour
         if (context.phase != InputActionPhase.Performed) return;
         throw new System.NotImplementedException();
     }
+
     #endregion
 
     #region Input Functions
+
+    ///////////////////////
+    //**INPUT FUNCTIONS**//
+    ///////////////////////
+
+    //These functions store values input values from events so we can process them seperately.
+
     public void onMovement(InputAction.CallbackContext context)
     {
         _movementInput = context.ReadValue<Vector2>();
@@ -216,17 +247,22 @@ public class B_Player : MonoBehaviour
 
     public void onLean(InputAction.CallbackContext context)
     {
-        throw new System.NotImplementedException();
+        _leanInput = context.ReadValue<float>();
     }
+
     #endregion
 
-    #region Internal Use Functions
+    #region Internal Functions
+
+    //////////////////////////
+    //**INTERNAL FUNCTIONS**//
+    //////////////////////////
 
     void GroundCheck()
     {
+        //ISSUE: Standing on edge means raycast misses ground.
         _isGrounded = Physics.Raycast(transform.position, transform.TransformDirection(Vector3.down), _capsuleCollider.height / 2 + GroundCheckAdditionalDistance);
         SetGrounded();
-        //Debug.Log(_isGrounded);
     }
 
     void SetGrounded()
