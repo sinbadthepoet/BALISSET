@@ -4376,7 +4376,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2989218181541451635, guid: 4473bcdf18e2b0e4f8552ed85295f94e, type: 3}
       propertyPath: GroundDrag
-      value: 15
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 2989218181541451635, guid: 4473bcdf18e2b0e4f8552ed85295f94e, type: 3}
       propertyPath: MovementAcceleration
