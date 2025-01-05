@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Windows;
+using static UnityEditor.Timeline.TimelinePlaybackControls;
 
-[RequireComponent(typeof(Rigidbody))]
-[RequireComponent(typeof(CapsuleCollider))]
-public class B_Player : MonoBehaviour
+public class B_Player : B_Biped
 {
     //This file makes heavy use of Regions.
     //Helpful for organization, but sometimes you want to view everything at once.
@@ -235,6 +234,21 @@ public class B_Player : MonoBehaviour
 
     //These functions store values input values from events so we can process them seperately.
 
+    public override void ExecuteCommand(string command, object arg)
+    {
+        switch (command)
+        {
+            case "Move":
+                _movementInput = (Vector2)arg;
+                break;
+            case "Look":
+                break;
+            default:
+                Debug.Log($"Ghost {_Ghost.name} sent shell {gameObject.name} the command \"{command}\", which is not supported.");
+                break;
+        }
+    }
+
     public void onMovement(InputAction.CallbackContext context)
     {
         _movementInput = context.ReadValue<Vector2>();
@@ -243,11 +257,6 @@ public class B_Player : MonoBehaviour
     public void onLook(InputAction.CallbackContext context)
     {
         _lookInput = context.ReadValue<Vector2>();
-    }
-
-    public void onLean(InputAction.CallbackContext context)
-    {
-        _leanInput = context.ReadValue<float>();
     }
 
     #endregion
