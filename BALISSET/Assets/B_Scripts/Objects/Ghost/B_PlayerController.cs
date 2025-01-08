@@ -18,25 +18,43 @@ public class B_PlayerController : B_Ghost
     /// </summary>
     protected override void Possess(B_Shell Shell)
     {
+        //TODO: Look intro improving support for different Input Maps
         base.Possess(Shell);
 
         if (inputActionAsset == null)
         {
-            Debug.Log($"Ghost {gameObject.name} does not have a valid InputActionAsset set!");
+            Debug.LogError($"Ghost {gameObject.name} does not have a valid InputActionAsset set!");
         } 
         else 
         {
+            var ShellActions = _Shell.GrabActions();
+            string unsupportedActions = "";
             foreach (var map in inputActionAsset.actionMaps)
             {
+                map.Enable();
                 foreach (var action in map.actions)
                 {
-                    var ActionDelegate = _Shell.GrabAction(action.name);
-                    if (ActionDelegate != null)
+                    if(ShellActions.TryGetValue(action.name, out var result))
                     {
-                        action.performed += ActionDelegate;
-                        BoundActions[action] = ActionDelegate;
+                        action.performed += result;
+                        BoundActions[action] = result;
+                    }
+                    else
+                    {
+                        if (unsupportedActions.Length > 0)
+                        {
+                            unsupportedActions += $", {action.name}";
+                        }
+                        else
+                        {
+                            unsupportedActions += $"{action.name}";
+                        }
                     }
                 }
+            }
+            if (unsupportedActions.Length > 0)
+            {
+                Debug.LogWarning($"Shell {_Shell.name} does not support the following actions: {unsupportedActions}");
             }
         }
     }
@@ -50,5 +68,10 @@ public class B_PlayerController : B_Ghost
             pair.Key.performed -= pair.Value;
         }
         BoundActions.Clear();
+    }
+
+    protected override void Start()
+    {
+        base.Start();
     }
 }

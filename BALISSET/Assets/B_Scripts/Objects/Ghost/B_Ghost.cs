@@ -9,6 +9,12 @@ public class B_Ghost : MonoBehaviour
 
     protected virtual void Possess(B_Shell Shell)
     {
+        if (Shell == null)
+        {
+            Debug.LogError($"Ghost {gameObject.name} did not get a valid Shell to possess.");
+            return;
+        }
+
         if (_Shell != null)
         {
             _Shell.Release();
@@ -31,11 +37,9 @@ public class B_Ghost : MonoBehaviour
         }
     }
 
-    public virtual void SendCommand(string command, object arg)
+    //TODO: this is temp debug behavior.
+    protected virtual void Start()
     {
-        if (_Shell != null)
-        {
-            _Shell.ExecuteCommand(command, arg);
-        }
+        Possess(FindAnyObjectByType<B_Shell>());
     }
 }
