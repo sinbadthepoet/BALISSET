@@ -63,9 +63,11 @@ public class B_Biped : B_Shell
 
         if (_vCamAim != null)
         {
-            var aim = (CinemachinePOV)_vCamAim;
-            aim.m_VerticalAxis.Value = _verticalLook;
+            //var aim = (CinemachinePOV)_vCamAim;
+            //aim.m_VerticalAxis.Value = _verticalLook;
         }
+
+        _lookInput = Vector2.zero;
     }
 
     #endregion
@@ -87,18 +89,18 @@ public class B_Biped : B_Shell
         }
 
         _vCam.Follow = _head;
-        _vCam.LookAt = _head;
+        //_vCam.LookAt = _head;
 
         _vCamBody = _vCam.AddCinemachineComponent<CinemachineHardLockToTarget>();
-        _vCamAim = _vCam.AddCinemachineComponent<CinemachinePOV>();
+        _vCamAim = _vCam.AddCinemachineComponent<CinemachineSameAsFollowTarget>();
 
-        var aim = (CinemachinePOV)_vCamAim;
-        aim.m_VerticalAxis.m_MaxValue = 80;
-        aim.m_VerticalAxis.m_MinValue = -80;
-        aim.m_VerticalAxis.m_AccelTime = 0;
-        aim.m_VerticalAxis.m_DecelTime = 0;
-        aim.m_HorizontalAxis.m_AccelTime = 0;
-        aim.m_HorizontalAxis.m_DecelTime = 0;
+        //var aim = (CinemachinePOV)_vCamAim;
+        //aim.m_VerticalAxis.m_MaxValue = 80;
+        //aim.m_VerticalAxis.m_MinValue = -80;
+        //aim.m_VerticalAxis.m_AccelTime = 0;
+        //aim.m_VerticalAxis.m_DecelTime = 0;
+        //aim.m_HorizontalAxis.m_AccelTime = 0;s
+        //aim.m_HorizontalAxis.m_DecelTime = 0;
 
         //Enable the camera
         if (_vCam != null)
