@@ -7,6 +7,10 @@ public class B_Ghost : MonoBehaviour
 {
     protected B_Shell _Shell;
 
+    /// <summary>
+    /// Binds the Ghost to the Shell, allowing it to be controlled.
+    /// </summary>
+    /// <param name="Shell"></param> The Shell to be possessed.
     protected virtual void Possess(B_Shell Shell)
     {
         if (Shell == null)
@@ -15,17 +19,21 @@ public class B_Ghost : MonoBehaviour
             return;
         }
 
+        //Release the Shell we may already be bound to.
         if (_Shell != null)
         {
-            _Shell.Release();
+            Release();
         }
 
         _Shell = Shell;
-        Shell.Possess(this);
+        _Shell.Possess(this);
 
         Debug.Log("Ghost " + gameObject.name + " has possessed Shell " + _Shell.name);
     }
 
+    /// <summary>
+    /// Releases the Shell from possession.
+    /// </summary>
     protected virtual void Release()
     {
         if (_Shell != null)
