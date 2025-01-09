@@ -24,52 +24,53 @@ public class B_PlayerController : B_Ghost
         if (inputActionAsset == null)
         {
             Debug.LogError($"Ghost {gameObject.name} does not have a valid InputActionAsset set!");
+            return;
         } 
-        else 
+
+        //Asks the shell for a dictionary containing action names and their co-responding function.
+        var ShellActions = _Shell.GrabActions();
+        string unsupportedActions = "";
+
+        //This Loop can be simplified using LINQ. Learn it.
+        foreach (var map in inputActionAsset.actionMaps)
         {
-            var ShellActions = _Shell.GrabActions();
-            string unsupportedActions = "";
-            foreach (var map in inputActionAsset.actionMaps)
+            map.Enable();
+            foreach (var action in map.actions)
             {
-                map.Enable();
-                foreach (var action in map.actions)
+                if(ShellActions.TryGetValue(action.name, out var result))
                 {
-                    if(ShellActions.TryGetValue(action.name, out var result))
-                    {
-                        action.performed += result;
-                        BoundActions[action] = result;
-                    }
-                    else
-                    {
-                        if (unsupportedActions.Length > 0)
-                        {
-                            unsupportedActions += $", {action.name}";
-                        }
-                        else
-                        {
-                            unsupportedActions += $"{action.name}";
-                        }
-                    }
+                    action.performed += result;
+                    BoundActions[action] = result;
+                }
+
+                else
+                {
+                    unsupportedActions += unsupportedActions.Length > 0 ? $", {action.name}" : $"{action.name}";
                 }
             }
-            if (unsupportedActions.Length > 0)
-            {
-                Debug.LogWarning($"Shell {_Shell.name} does not support the following actions: {unsupportedActions}");
-            }
+        }
+
+        // To simplify and seperate logic, I should probably move this debug functionality to somewhere else tbh.
+        if (unsupportedActions.Length > 0)
+        {
+            Debug.LogWarning($"Shell {_Shell.name} does not support the following actions: {unsupportedActions}");
         }
     }
 
     protected override void Release()
     {
         base.Release();
-
+        
+        // We also need to make sure we unbind the actions from this Shell.
         foreach (var pair in BoundActions)
         {
             pair.Key.performed -= pair.Value;
         }
+
         BoundActions.Clear();
     }
 
+    //TODO: This is temp debug behavior.
     protected override void Start()
     {
         base.Start();

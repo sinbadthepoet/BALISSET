@@ -9,16 +9,25 @@ using UnityEngine.InputSystem;
 
 public abstract class B_Shell : MonoBehaviour
 {
-    #region Base
+    #region Variables
+
+    #region References
     protected B_Ghost _Ghost;
-    protected int health;
+    #endregion
 
+    #region Values
     protected Dictionary<string, System.Action<UnityEngine.InputSystem.InputAction.CallbackContext>> ShellActions = new();
+    #endregion
 
-    public Dictionary<string, System.Action<UnityEngine.InputSystem.InputAction.CallbackContext>> GrabActions()
-    {
-        return ShellActions;
-    }
+    #region Character Values
+    protected int health;
+    #endregion
+
+    #endregion
+
+    #region Functions
+
+    #region Public Functions
 
     public virtual void Possess(B_Ghost Ghost)
     {
@@ -39,6 +48,9 @@ public abstract class B_Shell : MonoBehaviour
         }
     }
 
+    #endregion
+    #region Unity Events
+
     protected virtual void Awake()
     {
         InitializeActions();
@@ -49,6 +61,16 @@ public abstract class B_Shell : MonoBehaviour
         Look();
     }
 
+    #endregion
+    #region Getters
+
+    public Dictionary<string, System.Action<UnityEngine.InputSystem.InputAction.CallbackContext>> GrabActions()
+    {
+        return ShellActions;
+    }
+
+    #endregion
+    #region Internal Use Functions
     /// <summary>
     /// Sets up the dictionary ShellActions, where the key of an action name holds the value of an action function delegate.
     /// </summary>
@@ -56,14 +78,17 @@ public abstract class B_Shell : MonoBehaviour
     {
         ShellActions = new Dictionary<string, System.Action<UnityEngine.InputSystem.InputAction.CallbackContext>>
         {
-            { "Look", LookInput }
+            { "Look", LookInput },
+            { "Move", MoveInput }
         };
     }
     #endregion
-    #region Camera Stuff
 
-    // If for some reason we possess a shell that doesn't have a camera set up,
-    // we can use a back up camera to make sure we still have something to use.
+    #endregion
+
+    #region Look
+
+    #region Variables
 
     protected Vector2 _lookInput = Vector2.zero;
     protected float _verticalLook = 0;
@@ -72,6 +97,10 @@ public abstract class B_Shell : MonoBehaviour
     protected CinemachineVirtualCamera _vCam;
     protected CinemachineComponentBase _vCamBody;
     protected CinemachineComponentBase _vCamAim;
+
+    #endregion
+
+    #region Functions
 
     protected virtual void BindVirtualCamera()
     {
@@ -83,10 +112,36 @@ public abstract class B_Shell : MonoBehaviour
         throw new System.NotImplementedException();
     }
 
-    protected virtual void LookInput(InputAction.CallbackContext callbackContext)
+    void LookInput(InputAction.CallbackContext callbackContext)
     {
         _lookInput = callbackContext.ReadValue<Vector2>();
     }
+
+    #endregion
+
+    #endregion
+
+    #region Move
+
+    #region Variables
+
+    Vector2 _MovementInput = Vector2.zero;
+
+    #endregion
+
+    #region Functions
+
+    protected virtual void Move()
+    {
+        throw new System.NotImplementedException();
+    }
+
+    void MoveInput(InputAction.CallbackContext context)
+    {
+        _MovementInput = context.ReadValue<Vector2>();
+    }
+
+    #endregion
 
     #endregion
 }
