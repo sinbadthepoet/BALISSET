@@ -147,25 +147,64 @@ public class B_Biped : B_Shell
         }
     }
 
+    protected virtual void Jump(InputAction.CallbackContext context)
+    {
+        if (_isGrounded)
+        {
+            _rb.AddRelativeForce(Vector3.up * JumpForce, ForceMode.Impulse);
+            SetGrounded(false);
+        }
+    }
+
+    protected virtual void Crouch(InputAction.CallbackContext callback)
+    {
+        if (_isCrouched)
+        {
+            _isCrouched = false;
+            _capsuleCollider.height = StandingHeight;
+        }
+        else
+        {
+            _isCrouched = true;
+            _capsuleCollider.height = CrouchedHeight;
+            transform.Translate(Vector3.down * CrouchedHeight / 2);
+        }
+    }
+
+    protected virtual void Sprint(InputAction.CallbackContext context)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public void Interact(InputAction.CallbackContext context)
+    {
+        Debug.Log("INTERACT!");
+    }
+
     #endregion
     #region Component Use Functions
 
     void GroundCheck()
     {
         //ISSUE: Standing on edge means raycast misses ground.
-        _isGrounded = Physics.Raycast(transform.position, transform.TransformDirection(Vector3.down), _capsuleCollider.height / 2 + GroundCheckAdditionalDistance);
-        SetGrounded();
+        bool grounding = Physics.Raycast(transform.position, transform.TransformDirection(Vector3.down), _capsuleCollider.height / 2 + GroundCheckAdditionalDistance);
+        SetGrounded(grounding);
     }
 
-    void SetGrounded()
+    void SetGrounded(bool GroundingState)
     {
+        _isGrounded = GroundingState;
         _rb.drag = _isGrounded ? GroundDrag : AirDrag;
     }
 
     protected override void InitializeActions()
-        {
-            base.InitializeActions();
-        }
+    {
+        base.InitializeActions();
+        ShellActions.Add("Jump", Jump);
+        ShellActions.Add("Crouch", Crouch);
+        ShellActions.Add("Sprint", Sprint);
+        ShellActions.Add( "Interact", Interact);
+    }
 
     protected override void BindVirtualCamera()
     {
