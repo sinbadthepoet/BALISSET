@@ -4,5 +4,10 @@ using UnityEngine;
 
 public interface BI_Damagable
 {
-    public void Damage(int damage);
+    /// <summary>
+    /// Damages the entity.
+    /// </summary>
+    /// <param name="damage"></param> 100 Health represents a standard Biped.
+    /// <param name="source"></param> The source of the damage. Used for kill attribution.
+    public void Damage(int damage, object source);
 }

@@ -67,7 +67,7 @@ public abstract class B_Shell : MonoBehaviour, BI_Damagable
     #region Damage
 
     protected int health;
-    public abstract void Damage(int damage);
+    public abstract void Damage(int damage, object source);
 
     #endregion
 

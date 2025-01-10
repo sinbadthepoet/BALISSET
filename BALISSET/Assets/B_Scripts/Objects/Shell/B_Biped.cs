@@ -93,6 +93,8 @@ public class B_Biped : B_Shell
 
     #region Variables
 
+    [SerializeField] float _headHeight = 0.8f;
+
     #endregion
 
     #region Functions
@@ -247,9 +249,10 @@ public class B_Biped : B_Shell
     #endregion
 
     #region Damage
-    public override void Damage(int damage)
+
+    public override void Damage(int damage, object source)
     {
-        throw new NotImplementedException();
+        health -= damage;
     }
 
     #endregion
@@ -268,20 +271,18 @@ public class B_Biped : B_Shell
             _head = new GameObject("Head").transform;
         }
         _head.parent = transform;
-        _head.localPosition = Vector3.zero;
+        _head.localPosition = new Vector3(0, _headHeight, 0);
     }
 
     protected override void Awake()
     {
         base.Awake();
-
-        //Make sure the component has a head. Eventually, we can replace this with an editor feature.
-        //_head = transform.Find("Head");
     }
 
     protected override void Update()
     {
         base.Update();
+
         GroundCheck();
     }
 
