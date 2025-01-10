@@ -8,7 +8,8 @@ public class B_Ghost : MonoBehaviour
     protected B_Shell _Shell;
 
     /// <summary>
-    /// Binds the Ghost to the Shell, allowing it to be controlled.
+    /// Binds the Ghost to a new Shell, allowing it to be controlled.
+    /// Will release earlier possessed shell if one exists.
     /// </summary>
     /// <param name="Shell"></param> The Shell to be possessed.
     protected virtual void Possess(B_Shell Shell)

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
@@ -6,6 +7,8 @@ using UnityEngine.InputSystem;
 
 public class B_PlayerController : B_Ghost
 {
+    #region Variables
+
     [SerializeField] InputActionAsset inputActionAsset;
 
     /// <summary>
@@ -13,6 +16,9 @@ public class B_PlayerController : B_Ghost
     /// </summary>
     Dictionary<InputAction, System.Action<InputAction.CallbackContext>> BoundActions = new Dictionary<InputAction, System.Action<InputAction.CallbackContext>>();
 
+    #endregion
+
+    #region Functions
     /// <summary>
     /// Upon Possession, check shell for actions that correspond with IA Asset, and store delegates to functions for callbacks.
     /// </summary>
@@ -29,35 +35,42 @@ public class B_PlayerController : B_Ghost
 
         //Asks the shell for a dictionary containing action names and their co-responding function.
         var ShellActions = _Shell.GrabActions();
-        string unsupportedActions = "";
+        var unsupportedActions = new List<string>();
 
-        //This Loop can be simplified using LINQ. Learn it.
         foreach (var map in inputActionAsset.actionMaps)
         {
-            map.Enable();
-            foreach (var action in map.actions)
-            {
-                if(ShellActions.TryGetValue(action.name, out var result))
-                {
-                    action.performed += result;
-                    if (action.type == InputActionType.Value) //Values need to know when we cancel the action too!
-                    {
-                        action.canceled += result;
-                    }
-                    BoundActions[action] = result;
-                }
-
-                else
-                {
-                    unsupportedActions += unsupportedActions.Length > 0 ? $", {action.name}" : $"{action.name}";
-                }
-            }
+            BindActionMap(map, ShellActions, unsupportedActions);
         }
 
-        // To simplify and seperate logic, I should probably move this debug functionality to somewhere else tbh.
-        if (unsupportedActions.Length > 0)
+        //Log unsupported actions
+        if (unsupportedActions.Count > 0)
         {
-            Debug.LogWarning($"Shell {_Shell.name} does not support the following actions: {unsupportedActions}");
+            Debug.LogWarning($"Shell {_Shell.name} does not support the following actions: {string.Join(", ", unsupportedActions)}");
+        }
+    }
+
+    /// <summary>
+    /// Binds actions from an InputActionMap with the shell's action delegates.
+    /// </summary>
+    void BindActionMap(InputActionMap map, Dictionary<string, Action<InputAction.CallbackContext>> shellActions, List<string> unsupportedActions)
+    {
+        map.Enable();
+        foreach (var action in map.actions)
+        {
+            if (shellActions.TryGetValue(action.name, out var result))
+            {
+                action.performed += result;
+                if (action.type == InputActionType.Value) //Values need to know when we cancel the action too!
+                {
+                    action.canceled += result;
+                }
+                BoundActions[action] = result;
+            }
+
+            else
+            {
+                unsupportedActions.Add(action.name);
+            }
         }
     }
 
@@ -79,9 +92,11 @@ public class B_PlayerController : B_Ghost
         BoundActions.Clear();
     }
 
+
     //TODO: This is temp debug behavior.
     protected override void Start()
     {
         base.Start();
     }
+    #endregion
 }

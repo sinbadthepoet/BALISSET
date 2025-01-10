@@ -7,27 +7,23 @@ using UnityEditor.SearchService;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public abstract class B_Shell : MonoBehaviour
+public abstract class B_Shell : MonoBehaviour, BI_Damagable
 {
+    #region Ghost-Shell Behaviour
+
     #region Variables
 
-        #region References
+    #region References
 
-            protected B_Ghost _Ghost;
+    protected B_Ghost _Ghost;
 
-        #endregion
+    #endregion
 
-        #region Values
+    #region Values
 
-            protected Dictionary<string, System.Action<UnityEngine.InputSystem.InputAction.CallbackContext>> ShellActions = new();
+    protected Dictionary<string, System.Action<UnityEngine.InputSystem.InputAction.CallbackContext>> ShellActions = new();
     
-        #endregion
-
-        #region Character Values
-
-            protected int health;
-    
-        #endregion
+    #endregion
 
     #endregion
 
@@ -55,26 +51,6 @@ public abstract class B_Shell : MonoBehaviour
     }
 
     #endregion
-    #region Unity Events
-
-    protected virtual void Awake()
-    {
-        InitializeActions();
-    }
-
-    protected virtual void Update()
-    {
-        Look();
-    }
-
-    protected virtual void FixedUpdate()
-    {
-        Move();
-    }
-
-
-
-    #endregion
     #region Getters
 
     public Dictionary<string, System.Action<UnityEngine.InputSystem.InputAction.CallbackContext>> GrabActions()
@@ -83,21 +59,19 @@ public abstract class B_Shell : MonoBehaviour
     }
 
     #endregion
-    #region Internal Use Functions
-    /// <summary>
-    /// Sets up the dictionary ShellActions, where the key of an action name holds the value of an action function delegate.
-    /// </summary>
-    protected virtual void InitializeActions()
-    {
-        ShellActions = new Dictionary<string, System.Action<UnityEngine.InputSystem.InputAction.CallbackContext>>
-        {
-            { "Look", LookInput },
-            { "Movement", MoveInput }
-        };
-    }
+
     #endregion
 
     #endregion
+
+    #region Damage
+
+    protected int health;
+    public abstract void Damage(int damage);
+
+    #endregion
+
+    #region Actions
 
     #region Look
 
@@ -155,6 +129,41 @@ public abstract class B_Shell : MonoBehaviour
     }
 
     #endregion
+
+    #endregion
+
+    /// <summary>
+    /// Sets up the dictionary ShellActions, where the key of an action name holds the value of an action function delegate.
+    /// </summary>
+    protected virtual void InitializeActions()
+    {
+        ShellActions = new Dictionary<string, System.Action<UnityEngine.InputSystem.InputAction.CallbackContext>>
+        {
+            { "Look", LookInput },
+            { "Movement", MoveInput }
+        };
+    }
+    
+    #endregion
+
+    #region Unity Events
+
+    protected virtual void Awake()
+    {
+        InitializeActions();
+    }
+
+    protected virtual void Update()
+    {
+        Look();
+    }
+
+    protected virtual void FixedUpdate()
+    {
+        Move();
+    }
+
+
 
     #endregion
 }
