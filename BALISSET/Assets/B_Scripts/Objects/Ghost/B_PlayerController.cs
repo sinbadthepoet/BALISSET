@@ -40,6 +40,10 @@ public class B_PlayerController : B_Ghost
                 if(ShellActions.TryGetValue(action.name, out var result))
                 {
                     action.performed += result;
+                    if (action.type == InputActionType.Value) //Values need to know when we cancel the action too!
+                    {
+                        action.canceled += result;
+                    }
                     BoundActions[action] = result;
                 }
 
@@ -65,6 +69,11 @@ public class B_PlayerController : B_Ghost
         foreach (var pair in BoundActions)
         {
             pair.Key.performed -= pair.Value;
+
+            if (pair.Key.type == InputActionType.Value)
+            {
+                pair.Key.canceled -= pair.Value;
+            }
         }
 
         BoundActions.Clear();

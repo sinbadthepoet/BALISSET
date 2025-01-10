@@ -11,17 +11,23 @@ public abstract class B_Shell : MonoBehaviour
 {
     #region Variables
 
-    #region References
-    protected B_Ghost _Ghost;
-    #endregion
+        #region References
 
-    #region Values
-    protected Dictionary<string, System.Action<UnityEngine.InputSystem.InputAction.CallbackContext>> ShellActions = new();
-    #endregion
+            protected B_Ghost _Ghost;
 
-    #region Character Values
-    protected int health;
-    #endregion
+        #endregion
+
+        #region Values
+
+            protected Dictionary<string, System.Action<UnityEngine.InputSystem.InputAction.CallbackContext>> ShellActions = new();
+    
+        #endregion
+
+        #region Character Values
+
+            protected int health;
+    
+        #endregion
 
     #endregion
 
@@ -61,6 +67,13 @@ public abstract class B_Shell : MonoBehaviour
         Look();
     }
 
+    protected virtual void FixedUpdate()
+    {
+        Move();
+    }
+
+
+
     #endregion
     #region Getters
 
@@ -79,7 +92,7 @@ public abstract class B_Shell : MonoBehaviour
         ShellActions = new Dictionary<string, System.Action<UnityEngine.InputSystem.InputAction.CallbackContext>>
         {
             { "Look", LookInput },
-            { "Move", MoveInput }
+            { "Movement", MoveInput }
         };
     }
     #endregion
@@ -125,7 +138,7 @@ public abstract class B_Shell : MonoBehaviour
 
     #region Variables
 
-    Vector2 _MovementInput = Vector2.zero;
+    protected Vector2 _movementInput = Vector2.zero;
 
     #endregion
 
@@ -138,7 +151,7 @@ public abstract class B_Shell : MonoBehaviour
 
     void MoveInput(InputAction.CallbackContext context)
     {
-        _MovementInput = context.ReadValue<Vector2>();
+        _movementInput = context.ReadValue<Vector2>();
     }
 
     #endregion

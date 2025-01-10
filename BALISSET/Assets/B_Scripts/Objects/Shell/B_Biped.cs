@@ -14,9 +14,46 @@ public class B_Biped : B_Shell
 {
     #region Variables
 
-    Rigidbody _rb;
-    CapsuleCollider _capsuleCollider;
-    Transform _head;
+    #region References
+
+    [SerializeField] Rigidbody _rb;
+    [SerializeField] CapsuleCollider _capsuleCollider;
+    [SerializeField] Transform _head;
+
+    #endregion
+
+    #region Values
+
+    [SerializeField] float GroundCheckAdditionalDistance = 0.1f;
+
+    #endregion
+
+    #region Character Values
+
+    [SerializeField] float MovementSpeed = 7.0f;
+    [SerializeField] float MovementAcceleration = 100.0f;
+    float _movementForce;
+
+    [SerializeField] float GroundDrag = 1.0f;
+    [SerializeField] float AirDrag = 0.0f;
+
+    [SerializeField] float AirControlScalar = 0.1f;
+    [SerializeField] float CrouchedSpeedScalar = 0.75f;
+
+    [SerializeField] float CrouchedHeight = 1.0f;
+    [SerializeField] float StandingHeight = 2.0f;
+
+    [SerializeField] float JumpForce = 500.0f;
+
+
+    #endregion
+
+    #region Character States
+
+    bool _isCrouched;
+    bool _isGrounded;
+
+    #endregion
 
     #endregion
 
@@ -44,9 +81,19 @@ public class B_Biped : B_Shell
         base.Awake();
 
         //Make sure the component has a head. Eventually, we can replace this with an editor feature.
-        _head = transform.Find("Head");
+        //_head = transform.Find("Head");
     }
 
+    protected override void Update()
+    {
+        base.Update();
+        GroundCheck();
+    }
+
+    protected void OnValidate()
+    {
+        _movementForce = _rb.mass * MovementAcceleration;
+    }
 
     #endregion
     #region Action Functions
@@ -66,17 +113,59 @@ public class B_Biped : B_Shell
             //var aim = (CinemachinePOV)_vCamAim;
             //aim.m_VerticalAxis.Value = _verticalLook;
         }
+    }
 
-        _lookInput = Vector2.zero;
+    protected override void Move()
+    {
+        //_isMoving = _movementInput.magnitude > 0;
+
+        //Create the desired force vector in local space.
+        Vector3 MovementForce = new Vector3(_movementInput.x, 0, _movementInput.y) * _movementForce;
+
+        //Scale force based on circumstances.
+        if (!_isGrounded)
+        {
+            MovementForce *= AirControlScalar;
+        }
+        else if (_isCrouched) //Air control should be regardless of whether they're crouched on not
+        {
+            MovementForce *= CrouchedSpeedScalar; //Eventually, we should modify the _movementForce as we switch back and forth between states.
+        }
+
+        //Add force in local space.
+        _rb.AddRelativeForce(MovementForce, ForceMode.Force);
+
+        //Check the horizontal plane's velocity and limit it to the movement speed if it's too fast.
+        //This sucks because we can't shoot the player super fast out of a canon.
+        Vector3 PlanarVelocity = new Vector3(_rb.velocity.x, 0, _rb.velocity.z);
+
+        if (PlanarVelocity.magnitude > MovementSpeed)
+        {
+            PlanarVelocity = PlanarVelocity.normalized * MovementSpeed;
+            Vector3 CappedVelocity = new Vector3(PlanarVelocity.x, _rb.velocity.y, PlanarVelocity.z);
+            _rb.velocity = CappedVelocity;
+        }
     }
 
     #endregion
     #region Component Use Functions
 
-    protected override void InitializeActions()
+    void GroundCheck()
     {
-        base.InitializeActions();
+        //ISSUE: Standing on edge means raycast misses ground.
+        _isGrounded = Physics.Raycast(transform.position, transform.TransformDirection(Vector3.down), _capsuleCollider.height / 2 + GroundCheckAdditionalDistance);
+        SetGrounded();
     }
+
+    void SetGrounded()
+    {
+        _rb.drag = _isGrounded ? GroundDrag : AirDrag;
+    }
+
+    protected override void InitializeActions()
+        {
+            base.InitializeActions();
+        }
 
     protected override void BindVirtualCamera()
     {
