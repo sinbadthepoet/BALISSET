@@ -39,7 +39,7 @@ public class B_FallingState : BI_BipedMovementState
 {
     B_FallingState(B_Shell shell) : base(shell)
     {
-        Drag = 0;
+
     }
 
     public override void EnterState(B_Shell shell)
