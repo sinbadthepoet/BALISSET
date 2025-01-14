@@ -293,6 +293,20 @@ public class B_Biped : B_Shell
 
     #endregion
 
+    #region Inventory BS
+
+    object EquipedWeapon, BackupWeapon;
+
+    void Fire();
+
+    void Reload();
+
+    void ADS();
+
+    void SwapWeapon();
+
+    #endregion
+
     protected override void InitializeActions()
     {
         base.InitializeActions();
