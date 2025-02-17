@@ -250,7 +250,7 @@ public class B_Biped : B_Shell
 
     #region Damage
 
-    public override void Damage(int damage, object source)
+    public override void Damage(int damage, B_DamageType DamageType, object source)
     {
         health -= damage;
     }
@@ -293,17 +293,33 @@ public class B_Biped : B_Shell
 
     #endregion
 
-    #region Inventory BS
+    #region Inventory
+
+    #region Weapons
+
+    #endregion
 
     object EquipedWeapon, BackupWeapon;
 
-    void Fire();
+    void Fire()
+    {
 
-    void Reload();
+    }
 
-    void ADS();
+    void Reload()
+    {
 
-    void SwapWeapon();
+    }
+
+    void ADS()
+    {
+
+    }
+
+    void SwapWeapon()
+    {
+
+    }
 
     #endregion
 

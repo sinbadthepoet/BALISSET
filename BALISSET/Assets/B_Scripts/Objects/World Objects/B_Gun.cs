@@ -4,212 +4,194 @@ using UnityEngine;
 
 public class B_Gun : MonoBehaviour
 {
-    #region Definitions
+  //  #region Definitions
 
-    enum ReloadState{
-        Empty,
-        Mag_Released,
-        Remove_Mag,
-        Insert_Mag,
-        Loaded
-    }
+  //  enum ReloadState{
+  //      Empty,
+  //      Mag_Released,
+  //      Remove_Mag,
+  //      Insert_Mag,
+  //      Loaded
+  //  }
 
-    enum ReloadTypes{
-        MagLoaded,
-        BulletLoaded
-    }
+  //  enum ReloadTypes{
+  //      MagLoaded,
+  //      BulletLoaded,
+		//Battery
+  //  }
 
-    enum FiringMode
-    {
-        BoltLeverAction,
-        SemiAutomatic,
-        Burst,
-        Automatic,
-        ChargeShot, //Spartan Laser
-        SpamAndCharge, //Plasma Pistol
-        BatteryOperated, //Plasma Rifle
-        TwoPhase //OnClickStart, OnClickRelease
-    }
-
-    enum AttachmentPoints{
-        Scope,
-        Barrel,
-        UnderBarrel,
-        LeftRail,
-        RightRail,
-        Stock,
-        Grip
-    }
+  //  enum FiringMode
+  //  {
+  //      BoltLeverAction,
+  //      SemiAutomatic,
+  //      Burst,
+  //      Automatic,
+  //      ChargeShot, //Spartan Laser
+  //      SpamAndCharge, //Plasma Pistol
+  //      BatteryOperated, //Plasma Rifle
+  //      TwoPhase //OnClickStart, OnClickRelease
+  //  }
     
-    #endregion
+  //  #endregion
     
-    #region Parameters
+  //  #region Parameters
     
-    #region AimAssist
+  //  #region AimAssist
 
-    #region Sticky Camera Magnetism
-    //The camera slowing down when passing a valid target.
-
-
-    #endregion
-
-    #region Aim Magnetism
-    //The aiming vector snapping to a target.
-    //Bullet Magnetism is handled in B_Projectile.
-
-    #endregion
-
-    #region Strafe Tracking
-    //The camera turning to follow the target while the player is strafing.
+  //  #region Sticky Camera Magnetism
+  //  //The camera slowing down when passing a valid target.
 
 
-    #endregion
+  //  #endregion
 
-    #region ADS Snap
-    //ADS Auto Aim :clueless:
+  //  #region Aim Magnetism
+  //  //The aiming vector snapping to a target.
+  //  //Bullet Magnetism is handled in B_Projectile.
+
+  //  #endregion
+
+  //  #region Strafe Tracking
+  //  //The camera turning to follow the target while the player is strafing.
 
 
-    #endregion
+  //  #endregion
 
-    #endregion
+  //  #region ADS Snap
+  //  //ADS Auto Aim :clueless:
 
-    #region Accuracy
-    //Consider the possibility of gun weight, and weight distribution affecting recoil!
 
-    float AimVarianceDegrees; //The amount of variance in direction the bullet may take as the bullet exits the barrel.
+  //  #endregion
 
-    float HorizontalSway, VerticalSway; //The amount the barrel will sway while held at hip.
-    float MovementSwayScalar; //The amount that moving at a standard walking speed will affect sway. Scales with movement speed.
-    float ADSSwayScalar; //Sway is reduced while aiming down the sights.
+  //  #endregion
 
-    float CrouchSwayScalar; 
+  //  #region Accuracy
+  //  //Consider the possibility of gun weight, and weight distribution affecting recoil!
 
-    float HorizontalRecoilRate, VerticalRecoilRate;
-    float RecoilDecayPerSecond;
+  //  float AimVarianceDegrees; //The amount of variance in direction the bullet may take as the bullet exits the barrel.
 
-    Vector2 RecoilOffset;
+  //  float HorizontalSway, VerticalSway; //The amount the barrel will sway while held at hip.
+  //  float MovementSwayScalar; //The amount that moving at a standard walking speed will affect sway. Scales with movement speed.
+  //  float ADSSwayScalar; //Sway is reduced while aiming down the sights.
 
-    #region Reticle Bloom
+  //  float CrouchSwayScalar; 
 
-    float BloomPerShot, BloomDecayPerSecond, BloomMax;
+  //  float HorizontalRecoilRate, VerticalRecoilRate;
+  //  float RecoilDecayPerSecond;
 
-    #endregion
+  //  Vector2 RecoilOffset;
 
-    #endregion
+  //  #region Reticle Bloom
 
-    #region RateOfFire
+  //  float BloomPerShot, BloomDecayPerSecond, BloomMax;
+
+  //  #endregion
+
+  //  #endregion
+
+  //  #region RateOfFire
     
-    float RateOfFire;
-    float TimeBetweenShots;
-    float TimeSinceLastShot;
+  //  float RateOfFire;
+  //  float TimeBetweenShots;
+  //  float TimeSinceLastShot;
 
-    //Weapon Jamming?
+  //  //Weapon Jamming?
 
-    #endregion
+  //  #endregion
 
-    float EffectiveRange; //Used for Red Reticle Range, Activating Aim Assist, and Bullet Magnetism.
-    float ReloadTime; //May need to replace this with an array for each stage. Later, this could be tied to animation, or vice versa.
+  //  float EffectiveRange; //Used for Red Reticle Range, Activating Aim Assist, and Bullet Magnetism.
+  //  float ReloadTime; //May need to replace this with an array for each stage. Later, this could be tied to animation, or vice versa.
     
-    #region ADS
+  //  #region ADS
 
-    float ADSTime;
-    float ADSMagnification;
+  //  float ADSTime;
+  //  float ADSMagnification;
 
-    #endregion
+  //  #endregion
 
-    #region Switching
+  //  #region Switching
 
-    //Switch Time = othergun.TimeToSwitchFrom + this.TimeToSwitchTo;
+  //  //Switch Time = othergun.TimeToSwitchFrom + this.TimeToSwitchTo;
 
-    float TimeToSwitchTo;
-    float TimeToSwitchFrom;
+  //  float TimeToSwitchTo;
+  //  float TimeToSwitchFrom;
 
-    #endregion
+  //  #endregion
 
-    #region Sprint
+  //  #region Sprint
 
-    float TimeToEnterSprint;
-    float TimeToExitSprint;
+  //  float TimeToEnterSprint;
+  //  float TimeToExitSprint;
 
-    #endregion
+  //  #endregion
 
-    #endregion
+  //  #endregion
 
-    #region Private Variables
-    bool ChamberLoaded;
+  //  #region Private Variables
+  //  bool ChamberLoaded;
 
-    Transform BarrelPosition;
+  //  Transform BarrelPosition;
 
-    ReloadState ReloadStage;
+  //  ReloadState ReloadStage;
 
-    #endregion
+  //  #endregion
 
-    B_GunMagazine[] magazines; //These should come from the Inventory.
+  //  B_GunMagazine[] magazines; //These should come from the Inventory.
 
-    void Fire()
-    {
-        //Fire Bullet from Transform Position
-        //
-    }
+  //  void Fire()
+  //  {
+  //      //Fire Bullet from Transform Position
+  //      //
+  //  }
 
-    void Reload()
-    {
+  //  void Reload()
+  //  {
         
-    }
+  //  }
 
-    void LoadNextRound()
-    {
-        //Checks Magazine for next round and attempts to load it.
+  //  void LoadNextRound()
+  //  {
+  //      //Checks Magazine for next round and attempts to load it.
 
-    }
+  //  }
 }
 
-enum B_DamageType
-{
-    Ballistic,
-    Fire,
-    Explosive,
-    Slashing,
-    Piercing,
-    Electric
-}
+//public class B_HitscanProjectile : B_Projectile
+//{
 
-public abstract class B_Projectile : MonoBehaviour
-{
-    int penetrationStength;
+//}
 
-    B_DamageType damageType;
-    object Attribution;
+//public class B_PhysicalProjectile : B_Projectile
+//{
+//    float GravityArc;
+//    float EffectiveRange;
 
-    object Target; //Bullet Magnetism Strength
-}
+//    float TrackingStrength;
+//}
 
-public class B_HitscanProjectile : B_Projectile
-{
+//public class Attachments
+//{
+//    enum AttachmentPoints
+//    {
+//        Scope,
+//        Barrel,
+//        UnderBarrel,
+//        LeftRail,
+//        RightRail,
+//        Stock,
+//        Grip
+//    }
 
-}
+//    AttachmentPoints attachmentPoint;
+//    virtual void AttachToGun(); //Modify the gun stats when attached.
+//    virtual void RemoveAttachment(); 
+//}
 
-public class B_PhysicalProjectile : B_Projectile
-{
-    float GravityArc;
-    float EffectiveRange;
+//public abstract class B_GunMagazine
+//{
+//    int Capacity; 
+//    int RoundsLoaded;
+//    float UnloadTime;
+//    float LoadingTime;
 
-    float TrackingStrength;
-}
-
-public class Attachments
-{
-    B_Gun.AttachmentPoints attachmentPoint;
-    virtual void AttachToGun(); //Modify the gun stats when attached.
-    virtual void RemoveAttachment(); 
-}
-
-public abstract B_GunMagazine
-{
-    int Capacity; 
-    int RoundsLoaded;
-    float UnloadTime;
-    float LoadingTime;
-
-    public abstract void Reload(); // Custom Implementation for standard, taped, drum, and alternative magazines.
-}
+//    public abstract void Reload(); // Custom Implementation for standard, taped, drum, and alternative magazines.
+//}
