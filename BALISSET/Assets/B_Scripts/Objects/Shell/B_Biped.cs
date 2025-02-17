@@ -249,12 +249,12 @@ public class B_Biped : B_Shell
     #endregion
 
     #region Damage
-
+    /*
     public override void Damage(int damage, object source)
     {
         health -= damage;
     }
-
+    */
     #endregion
 
     #region Unity Events
@@ -297,13 +297,13 @@ public class B_Biped : B_Shell
 
     object EquipedWeapon, BackupWeapon;
 
-    void Fire();
+    //void Fire();
 
-    void Reload();
+    //void Reload();
 
-    void ADS();
+    //void ADS();
 
-    void SwapWeapon();
+    //void SwapWeapon();
 
     #endregion
 

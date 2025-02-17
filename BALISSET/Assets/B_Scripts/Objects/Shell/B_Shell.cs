@@ -7,7 +7,7 @@ using UnityEditor.SearchService;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public abstract class B_Shell : MonoBehaviour, BI_Damagable
+public abstract class B_Shell : MonoBehaviour
 {
     #region Ghost-Shell Behaviour
 
@@ -66,8 +66,8 @@ public abstract class B_Shell : MonoBehaviour, BI_Damagable
 
     #region Damage
 
-    protected int health;
-    public abstract void Damage(int damage, object source);
+    //protected int health;
+    //public abstract void Damage(int damage, object source);
 
     #endregion
 
@@ -162,8 +162,6 @@ public abstract class B_Shell : MonoBehaviour, BI_Damagable
     {
         Move();
     }
-
-
 
     #endregion
 }

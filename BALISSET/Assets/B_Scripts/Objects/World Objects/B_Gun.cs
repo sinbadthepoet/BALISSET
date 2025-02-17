@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class B_Gun : MonoBehaviour
 {
+    /*
     #region Definitions
 
     enum ReloadState{
@@ -212,4 +213,5 @@ public abstract B_GunMagazine
     float LoadingTime;
 
     public abstract void Reload(); // Custom Implementation for standard, taped, drum, and alternative magazines.
+    */
 }

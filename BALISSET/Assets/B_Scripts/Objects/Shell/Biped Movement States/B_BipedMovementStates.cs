@@ -4,6 +4,7 @@ using UnityEngine;
 
 public abstract class BI_BipedMovementState
 {
+    /*
     CapsuleCollider _capsuleCollider;
 
     protected float Drag = 1.0f;
@@ -56,6 +57,7 @@ public class B_FallingState : BI_BipedMovementState
     {
         throw new System.NotImplementedException();
     }
+    */
 }
 
 

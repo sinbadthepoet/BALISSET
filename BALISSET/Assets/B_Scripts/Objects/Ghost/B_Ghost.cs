@@ -5,31 +5,31 @@ using UnityEngine;
 
 public class B_Ghost : MonoBehaviour
 {
-    protected B_Shell _Shell;
+    protected B_Shell _PossessedShell;
 
     /// <summary>
     /// Binds the Ghost to a new Shell, allowing it to be controlled.
     /// Will release earlier possessed shell if one exists.
     /// </summary>
-    /// <param name="Shell"></param> The Shell to be possessed.
-    protected virtual void Possess(B_Shell Shell)
+    /// <param name="TargetShell"></param> The Shell to be possessed.
+    protected virtual void Possess(B_Shell TargetShell)
     {
-        if (Shell == null)
+        if (TargetShell == null)
         {
             Debug.LogError($"Ghost {gameObject.name} did not get a valid Shell to possess.");
             return;
         }
 
         //Release the Shell we may already be bound to.
-        if (_Shell != null)
+        if (_PossessedShell != null)
         {
             Release();
         }
 
-        _Shell = Shell;
-        _Shell.Possess(this);
+        _PossessedShell = TargetShell;
+        _PossessedShell.Possess(this);
 
-        Debug.Log("Ghost " + gameObject.name + " has possessed Shell " + _Shell.name);
+        Debug.Log("Ghost " + gameObject.name + " has possessed Shell " + _PossessedShell.name);
     }
 
     /// <summary>
@@ -37,16 +37,16 @@ public class B_Ghost : MonoBehaviour
     /// </summary>
     protected virtual void Release()
     {
-        if (_Shell != null)
+        if (_PossessedShell != null)
         {
-            _Shell.Release();
-            _Shell = null;
+            _PossessedShell.Release();
+            _PossessedShell = null;
 
-            Debug.Log("Ghost " + gameObject.name + " has been released from Shell " + _Shell.name);
+            Debug.Log("Ghost " + gameObject.name + " has been released from Shell " + _PossessedShell.name);
         }
     }
 
-    //TODO: this is temp debug behavior.
+    //TODO: this is temp behavior.
     protected virtual void Start()
     {
         Possess(FindAnyObjectByType<B_Shell>());
