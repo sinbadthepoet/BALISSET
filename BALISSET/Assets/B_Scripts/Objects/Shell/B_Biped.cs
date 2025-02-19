@@ -12,108 +12,343 @@ using UnityEngine.InputSystem.EnhancedTouch;
 [RequireComponent(typeof(CapsuleCollider))]
 public class B_Biped : B_Shell
 {
-    #region References
+    #region States
+
+    #region Definitions
+
+    private class BipedDefaultState
+    {
+        protected B_Biped biped;
+
+        public BipedDefaultState(B_Biped biped)
+        {
+            this.biped = biped;
+            CalculateMovementForce();
+        }
+
+        #region State Change
+
+        public virtual void EnterState()
+        {
+            JumpTimer = 0; //THIS MIGHT FUCK UP TRANSITIONS THOUGH DEFAULT
+        }
+
+        public virtual void ExitState(){}
+
+        #endregion
+
+        #region Fields and Internal Functions
+        //All Fields set to protected so that constructors of derived states can overwrite their values.
+
+        #region Movement
+
+        protected float MovementSpeed = 7.0f;
+
+        protected void SetMovementAcceleration(float Acceleration)
+        {
+            MovementAcceleration = Acceleration;
+            CalculateMovementForce();
+        }
+        protected float GetMovementAcceleration() { return MovementAcceleration; }
+        private float MovementAcceleration = 100.0f;
+
+        protected float GroundDrag = 1.0f;
+        
+        private void CalculateMovementForce()
+        {
+            _movementForce = biped._rb.mass * MovementAcceleration;
+        }
+        protected float _movementForce;
+
+        #endregion
+
+        #region Look
+
+
+
+        #endregion
+
+        #region Jump
+
+        protected float JumpForce = 500.0f;
+
+        // Delay between jumps to prevent jumping twice while still grounded.
+        // This logic may be better outside of the States, instead on the biped.
+        protected float JumpDelay = 0.1f;
+        float JumpTimer;
+
+        #endregion
+
+        #region Crouch
+
+        protected float PlayerHeight = 2.0f;
+
+        #endregion
+
+        #region Sprint
+
+        protected float SprintMinimumSpeed = 5.0f;
+
+        #endregion
+
+        #endregion
+
+        #region Functions
+
+        public virtual void Update()
+        {
+            if (!biped.GroundCheck())
+            {
+                biped.ChangeState(biped._FallingState);
+            }
+
+            JumpTimer += Time.deltaTime;
+        }
+
+        public virtual void Move(Vector2 input)
+        {
+            //Create the desired force vector in local space.
+            Vector3 MovementForce = new Vector3(input.x, 0, input.y) * _movementForce;
+
+            //Add force in local space.
+            biped._rb.AddRelativeForce(MovementForce, ForceMode.Force);
+
+            //Check the horizontal plane's velocity and limit it to the movement speed if it's too fast.
+            //May have some issues.
+            //Crouching may kill velocity in a way that feels bad. Let's see.
+            Vector3 PlanarVelocity = new Vector3(biped._rb.velocity.x, 0, biped._rb.velocity.z);
+
+            if (PlanarVelocity.magnitude > MovementSpeed)
+            {
+                PlanarVelocity = PlanarVelocity.normalized * MovementSpeed;
+                Vector3 CappedVelocity = new Vector3(PlanarVelocity.x, biped._rb.velocity.y, PlanarVelocity.z);
+                biped._rb.velocity = CappedVelocity;
+            }
+        }
+
+        public virtual void Look(Vector2 input)
+        {
+            //Horizontal Rotation of player GameObject
+            biped.transform.Rotate(Vector3.up, input.x);
+
+            //Vertical Rotation of child Camera GameObject
+            biped._verticalLook -= input.y;
+            biped._verticalLook = Mathf.Clamp(biped._verticalLook, -biped.LookAngleClamp, biped.LookAngleClamp);
+            biped._head.transform.localRotation = Quaternion.Euler(biped._verticalLook, 0, 0);
+
+            if (biped._vCamAim != null)
+            {
+                //var aim = (CinemachinePOV)_vCamAim;
+                //aim.m_VerticalAxis.Value = _verticalLook;
+            }
+        }
+
+        public virtual void Jump()
+        {
+            if(JumpTimer > JumpDelay)
+            {
+                biped._rb.AddRelativeForce(Vector3.up * JumpForce, ForceMode.Impulse);
+                JumpTimer = 0;
+            }
+        }
+        
+        public virtual void Crouch()
+        {
+            biped.ChangeState(biped._CrouchedState);
+        }
+
+        public virtual void Sprint()
+        {
+            if (biped._rb.velocity.magnitude > SprintMinimumSpeed)
+            {
+                biped.ChangeState(biped._SprintingState);
+            }
+        }
+
+        public virtual void Interact()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        #endregion
+    }
+
+    private class BipedCrouchedState : BipedDefaultState
+    {
+        //Keep an eye on jumping from crouch, might be whacky.
+
+        float CrouchedHeight;
+
+        public BipedCrouchedState(B_Biped biped) : base(biped)
+        {
+            MovementSpeed *= 0.5f;
+            SetMovementAcceleration(GetMovementAcceleration() * 0.3f);
+            CrouchedHeight = PlayerHeight * 0.5f;
+        }
+
+        public override void EnterState()
+        {
+            biped._capsuleCollider.height = CrouchedHeight;
+
+            // Move the player down by half the difference in height between states.
+            // Capsule Height changes from the center(?)
+            //biped.transform.Translate(Vector3.down * (PlayerHeight - CrouchedHeight)/2);
+        }
+
+        public override void ExitState()
+        {
+            biped._capsuleCollider.height = PlayerHeight;
+            //biped.transform.Translate(Vector3.up * (PlayerHeight - CrouchedHeight) / 2);
+        }
+
+        public override void Crouch()
+        {
+            biped.ChangeState(biped._DefaultState);
+        }
+    }
+
+    private class BipedFallingState : BipedDefaultState
+    {
+        float AirDrag;
+
+        public BipedFallingState(B_Biped biped): base(biped)
+        {
+            SetMovementAcceleration(GetMovementAcceleration() * 0.1f);
+            AirDrag = 0.0f;
+        }
+
+        public override void Update()
+        {
+            if (biped.GroundCheck())
+            {
+                biped.ChangeState(biped._DefaultState);
+            }
+        }
+
+        public override void EnterState()
+        {
+            biped._rb.drag = AirDrag;
+        }
+
+        public override void ExitState()
+        {
+            biped._rb.drag = GroundDrag;
+        }
+
+        public override void Crouch(){}
+
+        public override void Sprint(){}
+    }
+
+    private class BipedSprintingState : BipedDefaultState
+    {
+        public BipedSprintingState(B_Biped biped) : base(biped)
+        {
+            MovementSpeed += 3;
+            SetMovementAcceleration(GetMovementAcceleration() * 0.7f);
+        }
+
+        public override void Update()
+        {
+            base.Update();
+
+            if (biped._rb.velocity.magnitude < SprintMinimumSpeed)
+            {
+                biped.ChangeState(biped._DefaultState);
+            }
+        }
+
+        public override void Sprint()
+        {
+            biped.ChangeState(biped._DefaultState);
+        }
+    }
+
+    #endregion
+
+    #region Fields
+
+    BipedDefaultState _CurrentState;
+
+    //Create state objects for each state, and make sure to initialize them.
+    BipedDefaultState _DefaultState;
+    BipedCrouchedState _CrouchedState;
+    BipedFallingState _FallingState;
+    BipedSprintingState _SprintingState;
+
+    #endregion
+
+    #region Functions
+
+    void InitializeStates()
+    {
+        _DefaultState = new BipedDefaultState(this);
+        _CrouchedState = new BipedCrouchedState(this);
+        _FallingState = new BipedFallingState(this);
+        _SprintingState = new BipedSprintingState(this);
+    }
+
+    void ChangeState(BipedDefaultState newState)
+    {
+        _CurrentState.ExitState();
+        _CurrentState = newState;
+        _CurrentState.EnterState();
+    }
+
+    #endregion
+
+    #endregion
+
+    #region Fields
+    //Currently Using SerializeField, Create Custom Editors Once Biped is complete.
 
     [SerializeField] Rigidbody _rb;
     [SerializeField] CapsuleCollider _capsuleCollider;
     [SerializeField] Transform _head;
 
-    #endregion
-
-    #region Character States
-
-    bool _isCrouched;
-    bool _isGrounded;
-
-    #region Functions
-
-    void SetGrounded(bool GroundingState)
-    {
-        _isGrounded = GroundingState;
-        _rb.drag = _isGrounded ? GroundDrag : AirDrag;
-    }
-
-    #endregion
+    [SerializeField] float _headHeight = 0.8f;
+    [SerializeField] float GroundCheckAdditionalDistance = 0.1f;
 
     #endregion
 
     #region Actions
 
-    #region Movement
-
-    #region Variables
-
-    [SerializeField] float MovementSpeed = 7.0f;
-    [SerializeField] float MovementAcceleration = 100.0f;
-    float _movementForce;
-
-    [SerializeField] float GroundDrag = 1.0f;
-
-    #endregion
-
-    #region Functions
-
     protected override void Move()
     {
-        //_isMoving = _movementInput.magnitude > 0;
+        _CurrentState.Move(_movementInput);
+    }
 
-        //Create the desired force vector in local space.
-        Vector3 MovementForce = new Vector3(_movementInput.x, 0, _movementInput.y) * _movementForce;
+    protected override void Look()
+    {
+        _CurrentState.Look(_movementInput);
+    }
 
-        //Scale force based on circumstances.
-        if (!_isGrounded)
-        {
-            MovementForce *= AirControlScalar;
-        }
-        else if (_isCrouched) //Air control should be regardless of whether they're crouched on not
-        {
-            MovementForce *= CrouchedSpeedScalar; //Eventually, we should modify the _movementForce as we switch back and forth between states.
-        }
+    protected virtual void Jump(InputAction.CallbackContext context)
+    {
+        _CurrentState.Jump();
+    }
 
-        //Add force in local space.
-        _rb.AddRelativeForce(MovementForce, ForceMode.Force);
+    protected virtual void Crouch(InputAction.CallbackContext callback)
+    {
+        _CurrentState.Crouch();
+    }
 
-        //Check the horizontal plane's velocity and limit it to the movement speed if it's too fast.
-        //This sucks because we can't shoot the player super fast out of a canon.
-        Vector3 PlanarVelocity = new Vector3(_rb.velocity.x, 0, _rb.velocity.z);
+    protected virtual void Sprint(InputAction.CallbackContext context)
+    {
+        _CurrentState.Sprint();
+    }
 
-        if (PlanarVelocity.magnitude > MovementSpeed)
-        {
-            PlanarVelocity = PlanarVelocity.normalized * MovementSpeed;
-            Vector3 CappedVelocity = new Vector3(PlanarVelocity.x, _rb.velocity.y, PlanarVelocity.z);
-            _rb.velocity = CappedVelocity;
-        }
+    protected virtual void Interact(InputAction.CallbackContext context)
+    {
+        _CurrentState.Interact();
     }
 
     #endregion
 
-    #endregion
-
-    #region Look
-
-    #region Variables
-
-    [SerializeField] float _headHeight = 0.8f;
-
-    #endregion
-
-    #region Functions
-
-    protected override void Look()
+    bool GroundCheck()
     {
-        //Horizontal Rotation of player GameObject
-        transform.Rotate(Vector3.up, _lookInput.x);
-
-        //Vertical Rotation of child Camera GameObject
-        _verticalLook -= _lookInput.y;
-        _verticalLook = Mathf.Clamp(_verticalLook, -LookAngleClamp, LookAngleClamp);
-        _head.transform.localRotation = Quaternion.Euler(_verticalLook, 0, 0);
-
-        if (_vCamAim != null)
-        {
-            //var aim = (CinemachinePOV)_vCamAim;
-            //aim.m_VerticalAxis.Value = _verticalLook;
-        }
+        //ISSUE: Standing on edge means raycast misses ground.
+        return Physics.Raycast(transform.position, transform.TransformDirection(Vector3.down), _capsuleCollider.height / 2 + GroundCheckAdditionalDistance);
     }
 
     protected override void BindVirtualCamera()
@@ -137,125 +372,6 @@ public class B_Biped : B_Shell
             _vCam.enabled = true;
         }
     }
-
-    #endregion
-
-    #endregion
-
-    #region Jump
-
-    #region Variables
-
-    [SerializeField] float JumpForce = 500.0f;
-    
-    [SerializeField] float AirDrag = 0.0f;
-    [SerializeField] float AirControlScalar = 0.1f;
-
-    [SerializeField] float GroundCheckAdditionalDistance = 0.1f;
-
-    #endregion
-
-    #region Functions
-
-    protected virtual void Jump(InputAction.CallbackContext context)
-    {
-        if (_isGrounded)
-        {
-            _rb.AddRelativeForce(Vector3.up * JumpForce, ForceMode.Impulse);
-            SetGrounded(false);
-        }
-    }
-
-    void GroundCheck()
-    {
-        //ISSUE: Standing on edge means raycast misses ground.
-        bool grounding = Physics.Raycast(transform.position, transform.TransformDirection(Vector3.down), _capsuleCollider.height / 2 + GroundCheckAdditionalDistance);
-        SetGrounded(grounding);
-    }
-
-    #endregion
-
-    #endregion
-
-    #region Crouch
-
-    #region Variables
-
-    [SerializeField] float CrouchedSpeedScalar = 0.75f;
-    [SerializeField] float StandingHeight = 2.0f;
-    [SerializeField] float CrouchedHeight = 1.0f;
-
-    #endregion
-
-    #region Functions
-
-    protected virtual void Crouch(InputAction.CallbackContext callback)
-    {
-        if (_isCrouched)
-        {
-            _isCrouched = false;
-            _capsuleCollider.height = StandingHeight;
-        }
-        else
-        {
-            _isCrouched = true;
-            _capsuleCollider.height = CrouchedHeight;
-            transform.Translate(Vector3.down * CrouchedHeight / 2);
-        }
-    }
-
-    #endregion
-
-    #endregion
-
-    #region Sprint
-
-    #region Variables
-
-
-
-    #endregion
-
-    #region Functions
-
-    protected virtual void Sprint(InputAction.CallbackContext context)
-    {
-        throw new System.NotImplementedException();
-    }
-
-    #endregion
-
-    #endregion
-
-    #region Interact
-
-    #region Variables
-
-
-
-    #endregion
-
-    #region Functions
-
-    protected virtual void Interact(InputAction.CallbackContext context)
-    {
-        Debug.Log("INTERACT!");
-    }
-
-    #endregion
-
-    #endregion
-
-    #endregion
-
-    #region Damage
-    /*
-    public override void Damage(int damage, object source)
-    {
-        health -= damage;
-    }
-    */
-    #endregion
 
     #region Unity Events
 
@@ -282,28 +398,7 @@ public class B_Biped : B_Shell
     protected override void Update()
     {
         base.Update();
-
-        GroundCheck();
     }
-
-    protected void OnValidate()
-    {
-        _movementForce = _rb.mass * MovementAcceleration;
-    }
-
-    #endregion
-
-    #region Inventory BS
-
-    object EquipedWeapon, BackupWeapon;
-
-    //void Fire();
-
-    //void Reload();
-
-    //void ADS();
-
-    //void SwapWeapon();
 
     #endregion
 
