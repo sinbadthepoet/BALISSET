@@ -14,8 +14,6 @@ public class B_Biped : B_Shell
 {
     #region States
 
-    #region Definitions
-
     private class BipedDefaultState
     {
         protected B_Biped biped;
@@ -26,23 +24,18 @@ public class B_Biped : B_Shell
             CalculateMovementForce();
         }
 
-        #region State Change
-
+        //// STATE CHANGE ////
         public virtual void EnterState()
         {
-            JumpTimer = 0; //THIS MIGHT FUCK UP TRANSITIONS THOUGH DEFAULT
+            biped._rb.drag = GroundDrag;
+            biped._capsuleCollider.height = PlayerHeight;
         }
 
         public virtual void ExitState(){}
 
-        #endregion
+        //// MOVEMENT ////
 
-        #region Fields and Internal Functions
-        //All Fields set to protected so that constructors of derived states can overwrite their values.
-
-        #region Movement
-
-        protected float MovementSpeed = 7.0f;
+        protected float MovementSpeed = 2.0f;
 
         protected void SetMovementAcceleration(float Acceleration)
         {
@@ -52,7 +45,7 @@ public class B_Biped : B_Shell
         protected float GetMovementAcceleration() { return MovementAcceleration; }
         private float MovementAcceleration = 100.0f;
 
-        protected float GroundDrag = 1.0f;
+        protected float GroundDrag = 5.0f;
         
         private void CalculateMovementForce()
         {
@@ -60,40 +53,18 @@ public class B_Biped : B_Shell
         }
         protected float _movementForce;
 
-        #endregion
-
-        #region Look
-
-
-
-        #endregion
-
-        #region Jump
+        //// JUMP ////
 
         protected float JumpForce = 500.0f;
-
-        // Delay between jumps to prevent jumping twice while still grounded.
-        // This logic may be better outside of the States, instead on the biped.
         protected float JumpDelay = 0.1f;
-        float JumpTimer;
 
-        #endregion
-
-        #region Crouch
+        //// CROUCH ////
 
         protected float PlayerHeight = 2.0f;
 
-        #endregion
+        //// SPRINT ////
 
-        #region Sprint
-
-        protected float SprintMinimumSpeed = 5.0f;
-
-        #endregion
-
-        #endregion
-
-        #region Functions
+        protected float SprintMinimumSpeed = 1.5f;
 
         public virtual void Update()
         {
@@ -101,8 +72,6 @@ public class B_Biped : B_Shell
             {
                 biped.ChangeState(biped._FallingState);
             }
-
-            JumpTimer += Time.deltaTime;
         }
 
         public virtual void Move(Vector2 input)
@@ -145,10 +114,10 @@ public class B_Biped : B_Shell
 
         public virtual void Jump()
         {
-            if(JumpTimer > JumpDelay)
+            if(biped.JumpTimer > JumpDelay)
             {
                 biped._rb.AddRelativeForce(Vector3.up * JumpForce, ForceMode.Impulse);
-                JumpTimer = 0;
+                biped.JumpTimer = 0;
             }
         }
         
@@ -169,8 +138,6 @@ public class B_Biped : B_Shell
         {
             throw new System.NotImplementedException();
         }
-
-        #endregion
     }
 
     private class BipedCrouchedState : BipedDefaultState
@@ -178,6 +145,9 @@ public class B_Biped : B_Shell
         //Keep an eye on jumping from crouch, might be whacky.
 
         float CrouchedHeight;
+
+        //TODO: Temp
+        float FallCheckTimer;
 
         public BipedCrouchedState(B_Biped biped) : base(biped)
         {
@@ -192,18 +162,33 @@ public class B_Biped : B_Shell
 
             // Move the player down by half the difference in height between states.
             // Capsule Height changes from the center(?)
-            //biped.transform.Translate(Vector3.down * (PlayerHeight - CrouchedHeight)/2);
+            //biped.transform.Translate(Vector3.down * (PlayerHeight - CrouchedHeight) / 2);
+
+            //TODO: NOT WORKING
+            FallCheckTimer = 0;
         }
 
         public override void ExitState()
         {
-            biped._capsuleCollider.height = PlayerHeight;
             //biped.transform.Translate(Vector3.up * (PlayerHeight - CrouchedHeight) / 2);
         }
 
         public override void Crouch()
         {
             biped.ChangeState(biped._DefaultState);
+        }
+
+        public override void Update()
+        {
+            //TODO: This is temp behavior
+            if (FallCheckTimer > 1)
+            {
+                if (!biped.GroundCheck())
+                {
+                    biped.ChangeState(biped._FallingState);
+                }
+            }
+            FallCheckTimer += Time.deltaTime;
         }
     }
 
@@ -230,21 +215,18 @@ public class B_Biped : B_Shell
             biped._rb.drag = AirDrag;
         }
 
-        public override void ExitState()
-        {
-            biped._rb.drag = GroundDrag;
-        }
-
         public override void Crouch(){}
 
         public override void Sprint(){}
+
+        public override void Jump(){}
     }
 
     private class BipedSprintingState : BipedDefaultState
     {
         public BipedSprintingState(B_Biped biped) : base(biped)
         {
-            MovementSpeed += 3;
+            MovementSpeed += 10;
             SetMovementAcceleration(GetMovementAcceleration() * 0.7f);
         }
 
@@ -263,8 +245,6 @@ public class B_Biped : B_Shell
             biped.ChangeState(biped._DefaultState);
         }
     }
-
-    #endregion
 
     #region Fields
 
@@ -286,6 +266,9 @@ public class B_Biped : B_Shell
         _CrouchedState = new BipedCrouchedState(this);
         _FallingState = new BipedFallingState(this);
         _SprintingState = new BipedSprintingState(this);
+
+        _CurrentState = _DefaultState;
+        _CurrentState.EnterState();
     }
 
     void ChangeState(BipedDefaultState newState)
@@ -293,6 +276,8 @@ public class B_Biped : B_Shell
         _CurrentState.ExitState();
         _CurrentState = newState;
         _CurrentState.EnterState();
+
+        Debug.Log($"Now Entering {_CurrentState.GetType()}");
     }
 
     #endregion
@@ -309,6 +294,8 @@ public class B_Biped : B_Shell
     [SerializeField] float _headHeight = 0.8f;
     [SerializeField] float GroundCheckAdditionalDistance = 0.1f;
 
+    float JumpTimer;
+
     #endregion
 
     #region Actions
@@ -320,7 +307,7 @@ public class B_Biped : B_Shell
 
     protected override void Look()
     {
-        _CurrentState.Look(_movementInput);
+        _CurrentState.Look(_lookInput);
     }
 
     protected virtual void Jump(InputAction.CallbackContext context)
@@ -347,8 +334,9 @@ public class B_Biped : B_Shell
 
     bool GroundCheck()
     {
-        //ISSUE: Standing on edge means raycast misses ground.
-        return Physics.Raycast(transform.position, transform.TransformDirection(Vector3.down), _capsuleCollider.height / 2 + GroundCheckAdditionalDistance);
+        //Maybe Divide Radius by 2?
+        RaycastHit WhoCares;
+        return Physics.SphereCast(transform.position, _capsuleCollider.radius, transform.TransformDirection(Vector3.down), out WhoCares, _capsuleCollider.height / 2 + GroundCheckAdditionalDistance);
     }
 
     protected override void BindVirtualCamera()
@@ -393,11 +381,14 @@ public class B_Biped : B_Shell
     protected override void Awake()
     {
         base.Awake();
+        InitializeStates();
     }
 
     protected override void Update()
     {
         base.Update();
+        _CurrentState.Update();
+        JumpTimer += Time.deltaTime;
     }
 
     #endregion
