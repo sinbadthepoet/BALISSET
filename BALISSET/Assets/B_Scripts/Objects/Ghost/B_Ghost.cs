@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class B_Ghost : MonoBehaviour
+public abstract class B_Ghost : MonoBehaviour
 {
     protected B_Shell _PossessedShell;
 
@@ -11,7 +11,6 @@ public class B_Ghost : MonoBehaviour
     /// Binds the Ghost to a new Shell, allowing it to be controlled.
     /// Will release earlier possessed shell if one exists.
     /// </summary>
-    /// <param name="TargetShell"></param> The Shell to be possessed.
     protected virtual void Possess(B_Shell TargetShell)
     {
         if (TargetShell == null)
