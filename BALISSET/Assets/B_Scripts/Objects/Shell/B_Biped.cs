@@ -34,9 +34,15 @@ public class B_Biped : B_Shell
         public virtual void ExitState(){}
 
         //// MOVEMENT ////
-
+        
+        /// <summary>
+        /// Target Speed of the player.
+        /// </summary>
         protected float MovementSpeed = 2.0f;
 
+        /// <summary>
+        /// Maximum Acceleration of the player. F=ma
+        /// </summary>
         protected void SetMovementAcceleration(float Acceleration)
         {
             MovementAcceleration = Acceleration;
@@ -47,7 +53,7 @@ public class B_Biped : B_Shell
 
         protected float GroundDrag = 5.0f;
         
-        private void CalculateMovementForce()
+        protected virtual void CalculateMovementForce()
         {
             _movementForce = biped._rb.mass * MovementAcceleration;
         }
@@ -65,6 +71,12 @@ public class B_Biped : B_Shell
         //// SPRINT ////
 
         protected float SprintMinimumSpeed = 1.5f;
+
+        //// INTERACTION ////
+        
+        protected float InteractionSphereCastRadius = 0.3f;
+        protected float InteractioNSphereCastMaxDistance = 3.0f;
+
 
         public virtual void Update()
         {
@@ -135,6 +147,29 @@ public class B_Biped : B_Shell
         }
 
         public virtual void Interact()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public virtual void InteractionCheck()
+        {
+            int LayersMask = Layers.GetLayerMask(Layers.Interactive, Layers.Environment);
+            bool hit = Physics.SphereCast(biped._head.position, InteractionSphereCastRadius, biped._head.transform.forward, out biped.InteractionCheckHit, InteractioNSphereCastMaxDistance, LayersMask);
+            if (!hit) { return; }
+
+            var other = biped.InteractionCheckHit.collider.gameObject;
+
+            if (other.layer != Layers.Interactive) { return; }
+
+            //Check Interactions Available and Display Them.
+
+            if (other.CompareTag(Tags.PhysicsProp))
+            {
+                //Grab Object
+            }
+        }
+
+        public virtual void Fire()
         {
             throw new System.NotImplementedException();
         }
@@ -246,6 +281,53 @@ public class B_Biped : B_Shell
         }
     }
 
+    private class BipedHoldingPropState : BipedDefaultState
+    {
+        GameObject heldObject;
+
+        public BipedHoldingPropState(B_Biped biped) : base(biped)
+        {
+            MovementSpeed *= 0.8f;
+            SetMovementAcceleration(GetMovementAcceleration() * 0.5f);
+        }
+
+        public override void EnterState()
+        {
+            heldObject = biped.InteractionCheckHit.collider.gameObject;
+        }
+
+        public override void ExitState()
+        {
+            heldObject = null;
+        }
+
+        public override void Update()
+        {
+            base.Update();
+            HoldObject();
+        }
+
+        public override void Sprint() {}
+
+        public override void Interact()
+        {
+            biped.ChangeState(biped._DefaultState);
+        }
+
+        public override void InteractionCheck() {}
+
+        public override void Fire()
+        {
+            //Throw the object
+            biped.ChangeState(biped._DefaultState);
+        }
+
+        void HoldObject()
+        {
+            //Gravity Gun it
+        }
+    }
+
     #region Fields
 
     BipedDefaultState _CurrentState;
@@ -296,6 +378,9 @@ public class B_Biped : B_Shell
 
     float JumpTimer;
 
+    RaycastHit InteractionCheckHit;
+
+
     #endregion
 
     #region Actions
@@ -330,36 +415,12 @@ public class B_Biped : B_Shell
         _CurrentState.Interact();
     }
 
+    protected virtual void Fire(InputAction.CallbackContext context)
+    {
+        _CurrentState.Fire();
+    }
+
     #endregion
-
-    bool GroundCheck()
-    {
-        //Maybe Divide Radius by 2?
-        RaycastHit WhoCares;
-        return Physics.SphereCast(transform.position, _capsuleCollider.radius, transform.TransformDirection(Vector3.down), out WhoCares, _capsuleCollider.height / 2 + GroundCheckAdditionalDistance);
-    }
-
-    protected override void BindVirtualCamera()
-    {
-        _vCam = GameObject.Find("Player Virtual Camera").GetComponent<CinemachineVirtualCamera>();
-
-        //If no virtual camera can be found, we can make one for now.
-        if (_vCam == null)
-        {
-            _vCam = new GameObject("Player Virtual Camera", typeof(CinemachineVirtualCamera)).GetComponent<CinemachineVirtualCamera>();
-        }
-
-        _vCam.Follow = _head;
-
-        _vCamBody = _vCam.AddCinemachineComponent<CinemachineHardLockToTarget>();
-        _vCamAim = _vCam.AddCinemachineComponent<CinemachineSameAsFollowTarget>();
-
-        //Enable the camera
-        if (_vCam != null)
-        {
-            _vCam.enabled = true;
-        }
-    }
 
     #region Unity Events
 
@@ -391,7 +452,42 @@ public class B_Biped : B_Shell
         JumpTimer += Time.deltaTime;
     }
 
+    protected override void FixedUpdate()
+    {
+        base.FixedUpdate();
+        _CurrentState.InteractionCheck();
+    }
+
     #endregion
+
+    bool GroundCheck()
+    {
+        //Maybe Divide Radius by 2?
+        RaycastHit WhoCares;
+        return Physics.SphereCast(transform.position, _capsuleCollider.radius, transform.TransformDirection(Vector3.down), out WhoCares, _capsuleCollider.height / 2 + GroundCheckAdditionalDistance);
+    }
+
+    protected override void BindVirtualCamera()
+    {
+        _vCam = GameObject.Find("Player Virtual Camera").GetComponent<CinemachineVirtualCamera>();
+
+        //If no virtual camera can be found, we can make one for now.
+        if (_vCam == null)
+        {
+            _vCam = new GameObject("Player Virtual Camera", typeof(CinemachineVirtualCamera)).GetComponent<CinemachineVirtualCamera>();
+        }
+
+        _vCam.Follow = _head;
+
+        _vCamBody = _vCam.AddCinemachineComponent<CinemachineHardLockToTarget>();
+        _vCamAim = _vCam.AddCinemachineComponent<CinemachineSameAsFollowTarget>();
+
+        //Enable the camera
+        if (_vCam != null)
+        {
+            _vCam.enabled = true;
+        }
+    }
 
     protected override void InitializeActions()
     {

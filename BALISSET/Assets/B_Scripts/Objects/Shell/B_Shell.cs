@@ -26,6 +26,8 @@ public abstract class B_Shell : MonoBehaviour
         {
             //Move this to B_PlayerController?
             BindVirtualCamera();
+
+            //THIS SHOULD BE ON THE GHOST
             Cursor.lockState = CursorLockMode.Locked;
         }
     }
