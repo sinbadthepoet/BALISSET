@@ -77,7 +77,6 @@ public class B_Biped : B_Shell
         protected float InteractionSphereCastRadius = 0.3f;
         protected float InteractioNSphereCastMaxDistance = 3.0f;
 
-
         public virtual void Update()
         {
             if (!biped.GroundCheck())
@@ -154,18 +153,46 @@ public class B_Biped : B_Shell
         public virtual void InteractionCheck()
         {
             int LayersMask = Layers.GetLayerMask(Layers.Interactive, Layers.Environment);
-            bool hit = Physics.SphereCast(biped._head.position, InteractionSphereCastRadius, biped._head.transform.forward, out biped.InteractionCheckHit, InteractioNSphereCastMaxDistance, LayersMask);
-            if (!hit) { return; }
+            bool NowLookingAtSomething = Physics.SphereCast(biped._head.position, InteractionSphereCastRadius, biped._head.transform.forward, out biped.InteractionCheckHit, InteractioNSphereCastMaxDistance, LayersMask);
+            bool WasLookingAtSomething = !(biped.LookedAtGameObject == null);
 
+            //Beeeeen looking at nothing
+            if(!NowLookingAtSomething && !WasLookingAtSomething)
+            {
+                return;
+            }
+
+            //Stopped look at something
+            if (!NowLookingAtSomething && WasLookingAtSomething)
+            {
+                ClearValue();
+                return;
+            }
+
+            //We must be looking at something
             var other = biped.InteractionCheckHit.collider.gameObject;
 
-            if (other.layer != Layers.Interactive) { return; }
-
-            //Check Interactions Available and Display Them.
-
-            if (other.CompareTag(Tags.PhysicsProp))
+            //Are we looking at a wall?
+            if (other.layer != Layers.Interactive)
             {
-                //Grab Object
+                ClearValue();
+                return;
+            }
+
+            bool StillLookingAtSameObject = other == biped.LookedAtGameObject;
+            if (StillLookingAtSameObject)
+            {
+                return;
+            }
+
+            //Looking at something we weren't looking at last tick.
+            biped.LookedAtGameObject = other;
+            biped.InteractionString.Value = other.GetComponent<B_Interactive>().GetInteractionString();
+
+            void ClearValue()
+            {
+                biped.LookedAtGameObject = null;
+                biped.InteractionString.Value = "";
             }
         }
 
@@ -359,7 +386,7 @@ public class B_Biped : B_Shell
         _CurrentState = newState;
         _CurrentState.EnterState();
 
-        Debug.Log($"Now Entering {_CurrentState.GetType()}");
+        //Debug.Log($"Now Entering {_CurrentState.GetType()}");
     }
 
     #endregion
@@ -375,6 +402,9 @@ public class B_Biped : B_Shell
 
     [SerializeField] float _headHeight = 0.8f;
     [SerializeField] float GroundCheckAdditionalDistance = 0.1f;
+
+    [SerializeField] AlertStringVariable InteractionString;
+    GameObject LookedAtGameObject;
 
     float JumpTimer;
 
@@ -496,5 +526,15 @@ public class B_Biped : B_Shell
         ShellActions.Add("Crouch", Crouch);
         ShellActions.Add("Sprint", Sprint);
         ShellActions.Add( "Interact", Interact);
+    }
+
+    void InteractionMiss()
+    {
+
+    }
+
+    void InteractionHit()
+    {
+
     }
 }

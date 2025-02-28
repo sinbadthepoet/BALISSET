@@ -12,6 +12,6 @@ public class FloatReference
 
     public float Value
     {
-        get { return UseConstant ? ConstantValue : Variable.value; }
+        get { return UseConstant ? ConstantValue : Variable.Value; }
     }
 }

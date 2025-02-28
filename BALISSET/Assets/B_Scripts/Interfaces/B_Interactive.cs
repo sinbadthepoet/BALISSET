@@ -7,7 +7,7 @@ public abstract class B_Interactive : MonoBehaviour
     /// <summary>
     /// Get the string that describes interaction.
     /// </summary>
-    protected abstract string GetInteractionString();
+    public abstract string GetInteractionString();
 
     /// <summary>
     /// Triggers the interation.

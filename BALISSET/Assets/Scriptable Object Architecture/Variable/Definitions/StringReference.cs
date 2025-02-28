@@ -7,11 +7,11 @@ using UnityEngine;
 public class StringReference
 {
     public bool UseConstant;
-    public float ConstantValue;
+    public string ConstantValue;
     public StringVariable Variable;
 
-    public float Value
+    public string Value
     {
-        get { return UseConstant ? ConstantValue : Variable.value; }
+        get { return UseConstant ? ConstantValue : Variable.Value; }
     }
 }

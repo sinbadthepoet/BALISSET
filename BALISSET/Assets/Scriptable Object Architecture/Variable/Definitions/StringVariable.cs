@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu]
-public class StringVariable : ScriptableObject
+public class StringVariable : GameEvent
 {
-    public float value;
+    public string Value;
 }

@@ -1,0 +1,7 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="Display" style="flex-grow: 1;">
+        <ui:VisualElement name="Crosshair" style="flex-grow: 0; position: absolute; left: 50%; top: 50%; width: 5px; height: 5px; background-color: rgb(255, 255, 255); transform-origin: center; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; align-items: auto; justify-content: flex-start; flex-shrink: 0; -unity-text-align: upper-left; translate: -50% -50%;">
+            <ui:Label tabindex="-1" parse-escape-sequences="true" display-tooltip-when-elided="true" name="Highlight" style="-unity-text-align: upper-center; position: relative; top: 21px; display: flex; font-size: 36px;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
