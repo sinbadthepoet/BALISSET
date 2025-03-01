@@ -147,53 +147,33 @@ public class B_Biped : B_Shell
 
         public virtual void Interact()
         {
-            throw new System.NotImplementedException();
+            if(biped.LookedAtInteractive != null)
+            {
+                biped.LookedAtInteractive.Interact(biped);
+            }
         }
 
         public virtual void InteractionCheck()
         {
             int LayersMask = Layers.GetLayerMask(Layers.Interactive, Layers.Environment);
-            bool NowLookingAtSomething = Physics.SphereCast(biped._head.position, InteractionSphereCastRadius, biped._head.transform.forward, out biped.InteractionCheckHit, InteractioNSphereCastMaxDistance, LayersMask);
-            bool WasLookingAtSomething = !(biped.LookedAtGameObject == null);
+            bool hit = Physics.SphereCast(biped._head.position, InteractionSphereCastRadius, biped._head.transform.forward, out biped.InteractionCheckHit, InteractioNSphereCastMaxDistance, LayersMask);
 
-            //Beeeeen looking at nothing
-            if(!NowLookingAtSomething && !WasLookingAtSomething)
+            if (hit)
             {
-                return;
+                var interactive = biped.InteractionCheckHit.collider.gameObject.GetComponent<B_Interactive>();
+                if (interactive != null)
+                {
+                    if (interactive != biped.LookedAtInteractive)
+                    {
+                        biped.LookedAtInteractive = interactive;
+                        biped.InteractionString.Value = interactive.GetInteractionString();
+                    }
+                    return;
+                }
             }
 
-            //Stopped look at something
-            if (!NowLookingAtSomething && WasLookingAtSomething)
-            {
-                ClearValue();
-                return;
-            }
-
-            //We must be looking at something
-            var other = biped.InteractionCheckHit.collider.gameObject;
-
-            //Are we looking at a wall?
-            if (other.layer != Layers.Interactive)
-            {
-                ClearValue();
-                return;
-            }
-
-            bool StillLookingAtSameObject = other == biped.LookedAtGameObject;
-            if (StillLookingAtSameObject)
-            {
-                return;
-            }
-
-            //Looking at something we weren't looking at last tick.
-            biped.LookedAtGameObject = other;
-            biped.InteractionString.Value = other.GetComponent<B_Interactive>().GetInteractionString();
-
-            void ClearValue()
-            {
-                biped.LookedAtGameObject = null;
-                biped.InteractionString.Value = "";
-            }
+            biped.LookedAtInteractive = null;
+            biped.InteractionString.Value = "";
         }
 
         public virtual void Fire()
@@ -310,7 +290,10 @@ public class B_Biped : B_Shell
 
     private class BipedHoldingPropState : BipedDefaultState
     {
-        GameObject heldObject;
+        Rigidbody HeldObject;
+
+        float HeldPositionDistance = 3.0f;
+        float MaxDistanceToHeldPoint = 2.0f;
 
         public BipedHoldingPropState(B_Biped biped) : base(biped)
         {
@@ -318,14 +301,11 @@ public class B_Biped : B_Shell
             SetMovementAcceleration(GetMovementAcceleration() * 0.5f);
         }
 
-        public override void EnterState()
-        {
-            heldObject = biped.InteractionCheckHit.collider.gameObject;
-        }
-
         public override void ExitState()
         {
-            heldObject = null;
+            HeldObject.isKinematic = false;
+            HeldObject = null;
+            HeldObject.useGravity = true;
         }
 
         public override void Update()
@@ -349,9 +329,28 @@ public class B_Biped : B_Shell
             biped.ChangeState(biped._DefaultState);
         }
 
+        /// <summary>
+        /// Called on entry to the state. Sets object to be held.
+        /// </summary>
+        /// <param name="PhysicsProp"></param>
+        public void GrabObject(Rigidbody PhysicsProp)
+        {
+            HeldObject = PhysicsProp;
+            HeldObject.isKinematic = true;
+            HeldObject.useGravity = false;
+        }
+
+        /// <summary>
+        /// Gravity Gun Update Code
+        /// </summary>
         void HoldObject()
         {
-            //Gravity Gun it
+            if(HeldObject == null)
+            {
+                biped.ChangeState(biped._DefaultState);
+            }
+
+            HeldObject.position = biped._head.position + (biped._head.forward * HeldPositionDistance);
         }
     }
 
@@ -364,6 +363,7 @@ public class B_Biped : B_Shell
     BipedCrouchedState _CrouchedState;
     BipedFallingState _FallingState;
     BipedSprintingState _SprintingState;
+    BipedHoldingPropState _HoldingPropState;
 
     #endregion
 
@@ -375,6 +375,7 @@ public class B_Biped : B_Shell
         _CrouchedState = new BipedCrouchedState(this);
         _FallingState = new BipedFallingState(this);
         _SprintingState = new BipedSprintingState(this);
+        _HoldingPropState = new BipedHoldingPropState(this);
 
         _CurrentState = _DefaultState;
         _CurrentState.EnterState();
@@ -404,7 +405,7 @@ public class B_Biped : B_Shell
     [SerializeField] float GroundCheckAdditionalDistance = 0.1f;
 
     [SerializeField] AlertStringVariable InteractionString;
-    GameObject LookedAtGameObject;
+    B_Interactive LookedAtInteractive;
 
     float JumpTimer;
 
@@ -536,5 +537,11 @@ public class B_Biped : B_Shell
     void InteractionHit()
     {
 
+    }
+
+    public void GrabObject(Rigidbody PhysicsProp)
+    {
+        ChangeState(_HoldingPropState);
+        _HoldingPropState.GrabObject(PhysicsProp);
     }
 }

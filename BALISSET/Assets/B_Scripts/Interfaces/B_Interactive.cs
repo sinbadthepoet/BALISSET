@@ -13,7 +13,7 @@ public abstract class B_Interactive : MonoBehaviour
     /// Triggers the interation.
     /// </summary>
     /// <param name="Interactor">The entity that interacts with the interactive object.</param>
-    protected abstract void Interact(B_Shell Interactor);
+    public abstract void Interact(B_Biped Interactor);
 
     protected virtual void Reset()
     {
