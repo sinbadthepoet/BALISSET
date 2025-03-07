@@ -1,12 +1,6 @@
 using Cinemachine;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Drawing;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.EnhancedTouch;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(CapsuleCollider))]
@@ -183,7 +177,7 @@ public class B_Biped : B_Shell
 
         public virtual void Fire()
         {
-            throw new System.NotImplementedException();
+            biped.PlayerTriggerPull.Raise();
         }
     }
 
@@ -459,7 +453,7 @@ public class B_Biped : B_Shell
 
     RaycastHit InteractionCheckHit;
 
-
+    GameEvent PlayerTriggerPull;
     #endregion
 
     #region Actions
@@ -576,16 +570,6 @@ public class B_Biped : B_Shell
         ShellActions.Add("Sprint", Sprint);
         ShellActions.Add( "Interact", Interact);
         ShellActions.Add("Fire", Fire);
-    }
-
-    void InteractionMiss()
-    {
-
-    }
-
-    void InteractionHit()
-    {
-
     }
 
     public void GrabObject(Rigidbody PhysicsProp)
