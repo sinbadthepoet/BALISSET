@@ -298,24 +298,31 @@ public class B_Biped : B_Shell
         //hehe... propstate
         
         Rigidbody HeldObject;
+        float OriginalDrag;
+        float OriginalAngularDrag;
 
         //The position of the held object relative to the first person view.
         Vector3 GrabbedObjectPosition;
+
+        float SpringForceStrength;
+        float TorqueForceStrength;
+        float NewDrag;
+        float NewAngularDrag;
+        float AutomaticReleaseDistance;
+        float ThrowForce;
 
         public BipedHoldingPropState(B_Biped biped) : base(biped)
         {
             MovementSpeed *= 0.8f;
             SetMovementAcceleration(GetMovementAcceleration() * 0.5f);
-            GrabbedObjectPosition = new Vector3(0, -0.5f, 1);
-        }
 
-        public override void ExitState()
-        {
-            HeldObject.isKinematic = false;
-            //Cache this
-            HeldObject.GetComponent<Collider>().enabled = true;
-
-            HeldObject = null;
+            GrabbedObjectPosition = new Vector3(0, -0.5f, 5);
+            SpringForceStrength = 50.0f;
+            TorqueForceStrength = 50.0f;
+            NewDrag = 30.0f;
+            NewAngularDrag = 30.0f;
+            AutomaticReleaseDistance = 5.0f;
+            ThrowForce = 20.0f;
         }
         
         public override void FixedUpdate()
@@ -334,7 +341,7 @@ public class B_Biped : B_Shell
 
         public override void Fire()
         {
-            //Throw the object
+            HeldObject.AddForce(biped._head.transform.forward * ThrowForce, ForceMode.VelocityChange);
             biped.ChangeState(biped._DefaultState);
         }
 
@@ -345,9 +352,29 @@ public class B_Biped : B_Shell
         public void GrabObject(Rigidbody PhysicsProp)
         {
             HeldObject = PhysicsProp;
-            HeldObject.isKinematic = true;
-            //Cache this
-            HeldObject.GetComponent<Collider>().enabled = false;
+            HeldObject.useGravity = false;
+
+            //HeldObject.constraints = RigidbodyConstraints.FreezeRotation;
+
+            OriginalDrag = HeldObject.drag;
+            HeldObject.drag = NewDrag;
+
+            OriginalAngularDrag = HeldObject.angularDrag;
+            HeldObject.angularDrag = NewAngularDrag;
+        }
+
+        public override void ExitState()
+        {
+            HeldObject.useGravity = true;
+            //HeldObject.constraints = RigidbodyConstraints.None;
+            
+            HeldObject.drag = OriginalDrag;
+            OriginalDrag = 1;
+
+            HeldObject.angularDrag = OriginalAngularDrag;
+            OriginalAngularDrag = 0.05f;
+
+            HeldObject = null;
         }
 
         /// <summary>
@@ -358,8 +385,20 @@ public class B_Biped : B_Shell
             Vector3 DesiredPosition = biped._head.transform.position + biped._head.transform.TransformDirection(GrabbedObjectPosition);
             Quaternion DesiredRotation = biped._head.transform.rotation * Quaternion.identity; //Local Identity to World Space Quaternion.
 
-            HeldObject.MovePosition(DesiredPosition);
-            HeldObject.MoveRotation(DesiredRotation);
+            if (Vector3.Distance(DesiredPosition, HeldObject.position) > AutomaticReleaseDistance)
+            {
+                biped.ChangeState(biped._DefaultState);
+                return;
+            }
+
+            Vector3 Force = DesiredPosition - HeldObject.transform.position;
+            Force *= SpringForceStrength;
+
+            Quaternion DeltaRotation = DesiredRotation * Quaternion.Inverse(HeldObject.transform.rotation);
+            Vector3 Torque = new Vector3(DeltaRotation.x, DeltaRotation.y, DeltaRotation.z) * TorqueForceStrength;
+
+            HeldObject.AddForce(Force, ForceMode.VelocityChange);
+            HeldObject.AddTorque(Torque, ForceMode.VelocityChange);
         }
     }
 
@@ -536,6 +575,7 @@ public class B_Biped : B_Shell
         ShellActions.Add("Crouch", Crouch);
         ShellActions.Add("Sprint", Sprint);
         ShellActions.Add( "Interact", Interact);
+        ShellActions.Add("Fire", Fire);
     }
 
     void InteractionMiss()
