@@ -1,0 +1,8 @@
+This should be used for things like Damage Types, etc. These can hold more data than a simple enum value for the damage type.
+
+Consider Rock Paper Scisors:
+- Create a ScriptableObject Class for each damage type.
+- Give it a list of things that it does damage to.
+- Dynamite! Add a new type to the game, and we can say it damages all existing types.
+
+All this while avoiding writing new code!
