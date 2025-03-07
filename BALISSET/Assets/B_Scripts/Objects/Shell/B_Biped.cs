@@ -85,6 +85,11 @@ public class B_Biped : B_Shell
             }
         }
 
+        public virtual void FixedUpdate()
+        {
+            InteractionCheck();
+        }
+
         public virtual void Move(Vector2 input)
         {
             //Create the desired force vector in local space.
@@ -290,27 +295,31 @@ public class B_Biped : B_Shell
 
     private class BipedHoldingPropState : BipedDefaultState
     {
+        //hehe... propstate
+        
         Rigidbody HeldObject;
 
-        float HeldPositionDistance = 3.0f;
-        float MaxDistanceToHeldPoint = 2.0f;
+        //The position of the held object relative to the first person view.
+        Vector3 GrabbedObjectPosition;
 
         public BipedHoldingPropState(B_Biped biped) : base(biped)
         {
             MovementSpeed *= 0.8f;
             SetMovementAcceleration(GetMovementAcceleration() * 0.5f);
+            GrabbedObjectPosition = new Vector3(0, -0.5f, 1);
         }
 
         public override void ExitState()
         {
             HeldObject.isKinematic = false;
-            HeldObject = null;
-            HeldObject.useGravity = true;
-        }
+            //Cache this
+            HeldObject.GetComponent<Collider>().enabled = true;
 
-        public override void Update()
+            HeldObject = null;
+        }
+        
+        public override void FixedUpdate()
         {
-            base.Update();
             HoldObject();
         }
 
@@ -337,20 +346,20 @@ public class B_Biped : B_Shell
         {
             HeldObject = PhysicsProp;
             HeldObject.isKinematic = true;
-            HeldObject.useGravity = false;
+            //Cache this
+            HeldObject.GetComponent<Collider>().enabled = false;
         }
 
         /// <summary>
-        /// Gravity Gun Update Code
+        /// Gravity Gun Update Code. Currently not Physics Based, but would love for it to be eventually.
         /// </summary>
         void HoldObject()
         {
-            if(HeldObject == null)
-            {
-                biped.ChangeState(biped._DefaultState);
-            }
+            Vector3 DesiredPosition = biped._head.transform.position + biped._head.transform.TransformDirection(GrabbedObjectPosition);
+            Quaternion DesiredRotation = biped._head.transform.rotation * Quaternion.identity; //Local Identity to World Space Quaternion.
 
-            HeldObject.position = biped._head.position + (biped._head.forward * HeldPositionDistance);
+            HeldObject.MovePosition(DesiredPosition);
+            HeldObject.MoveRotation(DesiredRotation);
         }
     }
 
@@ -486,7 +495,7 @@ public class B_Biped : B_Shell
     protected override void FixedUpdate()
     {
         base.FixedUpdate();
-        _CurrentState.InteractionCheck();
+        _CurrentState.FixedUpdate();
     }
 
     #endregion
