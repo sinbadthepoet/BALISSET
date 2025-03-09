@@ -2,9 +2,60 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class B_Gun : MonoBehaviour
+[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(Collider))]
+public class B_Gun : B_Interactive
 {
+    public Rigidbody rb { get; private set; }
+    public Transform OriginalTransform { get; private set; }
+
+    public List<Collider> Colliders { get; private set; }
+
+    public override string GetInteractionString()
+    {
+        return "Equip";
+    }
+
+    public override void Interact(B_Biped Interactor)
+    {
+        Interactor.PickUpWeapon(this);
+    }
+
+    void Start()
+    {
+        rb = GetComponent<Rigidbody>();
+        OriginalTransform = transform.parent;
+
+        Colliders = new List<Collider>();
+
+        var GetColliders = GetComponents<Collider>();
+
+        foreach(Collider collider in GetColliders)
+        {
+            Colliders.Add(collider);
+        }
+    }
+
     /*
+    [SerializeField] Rigidbody rb;
+
+    string InteractionString;
+
+    void Start()
+    {
+        rb = GetComponent<Rigidbody>();
+    }
+
+    public override string GetInteractionString()
+    {
+        return InteractionString;
+    }
+
+    public override void Interact(B_Biped Interactor)
+    {
+        Interactor.PickUpWeapon(this);
+    }
+
     #region Definitions
 
     enum ReloadState{

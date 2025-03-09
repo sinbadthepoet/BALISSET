@@ -177,7 +177,17 @@ public class B_Biped : B_Shell
 
         public virtual void Fire()
         {
-            biped.PlayerTriggerPull.Raise();
+            Debug.Log("Click!");
+        }
+
+        public virtual void SwapWeapons()
+        {
+            //Maybe we need a separate state for weapons
+
+            if(biped.ReserveWeapon == null || biped.HeldWeapon == null) { return; }
+            (biped.HeldWeapon, biped.ReserveWeapon) = (biped.ReserveWeapon, biped.HeldWeapon);
+            biped.HeldWeapon.gameObject.SetActive(true);
+            biped.ReserveWeapon.gameObject.SetActive(false);
         }
     }
 
@@ -304,6 +314,7 @@ public class B_Biped : B_Shell
         float NewAngularDrag;
         float AutomaticReleaseDistance;
         float ThrowForce;
+        float MaxLetGoSpeed;
 
         public BipedHoldingPropState(B_Biped biped) : base(biped)
         {
@@ -317,6 +328,7 @@ public class B_Biped : B_Shell
             NewAngularDrag = 30.0f;
             AutomaticReleaseDistance = 5.0f;
             ThrowForce = 20.0f;
+            MaxLetGoSpeed = 20.0f;
         }
         
         public override void FixedUpdate()
@@ -327,6 +339,11 @@ public class B_Biped : B_Shell
         public override void Sprint() {}
 
         public override void Interact()
+        {
+            biped.ChangeState(biped._DefaultState);
+        }
+
+        public override void SwapWeapons()
         {
             biped.ChangeState(biped._DefaultState);
         }
@@ -367,6 +384,8 @@ public class B_Biped : B_Shell
 
             HeldObject.angularDrag = OriginalAngularDrag;
             OriginalAngularDrag = 0.05f;
+
+            HeldObject.velocity = Vector3.ClampMagnitude(HeldObject.velocity, MaxLetGoSpeed);
 
             HeldObject = null;
         }
@@ -452,8 +471,6 @@ public class B_Biped : B_Shell
     float JumpTimer;
 
     RaycastHit InteractionCheckHit;
-
-    GameEvent PlayerTriggerPull;
     #endregion
 
     #region Actions
@@ -491,6 +508,11 @@ public class B_Biped : B_Shell
     protected virtual void Fire(InputAction.CallbackContext context)
     {
         _CurrentState.Fire();
+    }
+
+    protected virtual void SwapWeapons(InputAction.CallbackContext context)
+    {
+        _CurrentState.SwapWeapons();
     }
 
     #endregion
@@ -568,8 +590,9 @@ public class B_Biped : B_Shell
         ShellActions.Add("Jump", Jump);
         ShellActions.Add("Crouch", Crouch);
         ShellActions.Add("Sprint", Sprint);
-        ShellActions.Add( "Interact", Interact);
+        ShellActions.Add("Interact", Interact);
         ShellActions.Add("Fire", Fire);
+        ShellActions.Add("Swap Weapons", SwapWeapons);
     }
 
     public void GrabObject(Rigidbody PhysicsProp)
@@ -577,4 +600,110 @@ public class B_Biped : B_Shell
         ChangeState(_HoldingPropState);
         _HoldingPropState.GrabObject(PhysicsProp);
     }
+
+    B_Gun HeldWeapon;
+    B_Gun ReserveWeapon;
+    [SerializeField] Transform HeldWeaponViewmodelTransform;
+
+    public void PickUpWeapon(B_Gun Gun)
+    {
+        //TODO: Duplicate Weapons
+
+        //No Gun
+        if(HeldWeapon == null)
+        {
+            HeldWeapon = Gun;
+        }
+
+        // One Gun
+        else if(ReserveWeapon == null)
+        {
+            ReserveWeapon = Gun;
+            _CurrentState.SwapWeapons();
+        }
+
+        //Two Guns
+        else
+        {
+            DropWeapon();
+            HeldWeapon = Gun;
+        }
+
+        Gun.transform.parent = HeldWeaponViewmodelTransform;
+
+        Gun.transform.localPosition = Vector3.zero;
+        Gun.transform.localRotation = Quaternion.identity;
+
+        Gun.rb.isKinematic = true;
+        foreach(Collider collider in Gun.Colliders)
+        {
+            collider.enabled = false;
+        }
+    }
+
+    /// <summary>
+    /// Drops currently held weapon. Does not swap weapons after drop.
+    /// For that, use SwapWeapon();
+    /// </summary>
+    void DropWeapon()
+    {
+        transform.parent = HeldWeapon.OriginalTransform;
+        HeldWeapon.rb.isKinematic = false;
+        foreach(Collider collider in HeldWeapon.Colliders)
+        {
+            collider.enabled = true;
+        }
+
+        HeldWeapon.rb.AddForce(_head.transform.forward * 10);
+    }
+
+    /*
+    B_Gun CurrentWeapon;
+    B_Gun ReserveWeapon;
+
+    [SerializeField] Transform GunHeldPosition;
+
+    void SwapWeapons()
+    {
+        var Holder = CurrentWeapon;
+        CurrentWeapon = ReserveWeapon;
+        ReserveWeapon = Holder;
+
+        //NULL REF EXCEPTION
+        CurrentWeapon.gameObject.SetActive(true);
+        ReserveWeapon.gameObject.SetActive(false);
+    }
+
+    void DropWeapon()
+    {
+
+    }
+
+    public void PickUpWeapon(B_Gun Gun)
+    {
+        if (ReserveWeapon == null)
+        {
+            SwapWeapons();
+        }
+
+        if (CurrentWeapon != null)
+        {
+            DropWeapon();
+        }
+
+        CurrentWeapon = Gun;
+
+        Gun.transform.parent = GunHeldPosition;
+
+        Gun.transform.position = Vector3.zero;
+        Gun.transform.rotation = Quaternion.identity;
+
+        var GunColliders = Gun.GetComponents<Collider>();
+
+        foreach(Collider collider in GunColliders)
+        {
+            collider.enabled = false;
+        }
+    }
+    */
 }
