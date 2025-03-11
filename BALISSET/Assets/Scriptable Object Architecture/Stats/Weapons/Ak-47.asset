@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb3742cb61a1c974b9190d8a6e4d66fa, type: 3}
+  m_Name: Ak-47
+  m_EditorClassIdentifier: 
+  Name: AK-47
+  Model: {fileID: 100000, guid: 7d0124d3bdb8cba4f834aae3a9962ddc, type: 3}
+  Mass: 4
+  FiringMode:
+    rid: 2802157281572552706
+  ReloadMode:
+    rid: 2802157281572552707
+  projectile: {fileID: 0}
+  RoundsPerMinute: 0
+  HorizontalSway: 0
+  VerticalSway: 0
+  MovementSwayScalar: 0
+  ADSSwayScalar: 0
+  CrouchSwayScalar: 0
+  HorizontalRecoilPerShot: 0
+  VerticalRecoilPerShot: 0
+  RecoilDecayPerSecond: 0
+  RecoilOffsetMagnitudeLimit: 0
+  AimVarianceDegrees: 0
+  BloomPerShot: 0
+  BloomDecayPerSecond: 0
+  BloomMax: 0
+  ADSMagnification: 0
+  TimeToADS: 0
+  TimeToSwitchToSeconds: 0
+  TimeToSwitchFromSeconds: 0
+  TimeToEnterSprintSeconds: 0
+  TimeToExitSprintSeconds: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: 2802157281572552706
+      type: {class: FullyAutomatic, ns: , asm: Assembly-CSharp}
+      data: 
+    - rid: 2802157281572552707
+      type: {class: MagazineReload, ns: , asm: Assembly-CSharp}
+      data: 

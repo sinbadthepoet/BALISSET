@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,10 +7,15 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public class B_Gun : B_Interactive
 {
+    #region Physics
+
     public Rigidbody rb { get; private set; }
     public Transform OriginalTransform { get; private set; }
-
     public List<Collider> Colliders { get; private set; }
+
+    #endregion
+
+    #region Interaction
 
     public override string GetInteractionString()
     {
@@ -21,6 +27,35 @@ public class B_Gun : B_Interactive
         Interactor.PickUpWeapon(this);
     }
 
+    #endregion
+
+    #region Gun
+
+    [SerializeReference] FiringModes FiringMode = new FullyAutomatic();
+    [SerializeReference] ReloadModes ReloadMode = new MagazineReload();
+
+    [SerializeField] GameObject _Projectile;
+
+    public void PullTrigger()
+    {
+        FiringMode.TriggerPull();
+    }
+
+    public void ReleaseTrigger()
+    {
+        FiringMode.TriggerRelease();
+    }
+
+    public void Fire(GameObject proj = null)
+    {
+        if(proj == null) { proj = _Projectile; }
+        Instantiate(proj);
+    }
+
+    #endregion
+
+    #region Unity Events
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -28,33 +63,22 @@ public class B_Gun : B_Interactive
 
         Colliders = new List<Collider>();
 
-        var GetColliders = GetComponents<Collider>();
-
-        foreach(Collider collider in GetColliders)
+        foreach (Collider collider in GetComponents<Collider>())
         {
             Colliders.Add(collider);
         }
+
+        FiringMode.Initialize(this);
     }
+    
+    void Update()
+    {
+        FiringMode.Update();
+    }
+
+    #endregion
 
     /*
-    [SerializeField] Rigidbody rb;
-
-    string InteractionString;
-
-    void Start()
-    {
-        rb = GetComponent<Rigidbody>();
-    }
-
-    public override string GetInteractionString()
-    {
-        return InteractionString;
-    }
-
-    public override void Interact(B_Biped Interactor)
-    {
-        Interactor.PickUpWeapon(this);
-    }
 
     #region Definitions
 

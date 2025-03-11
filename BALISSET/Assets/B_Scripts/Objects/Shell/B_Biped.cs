@@ -175,9 +175,17 @@ public class B_Biped : B_Shell
             biped.InteractionString.Value = "";
         }
 
-        public virtual void Fire()
+        public virtual void Fire(InputAction.CallbackContext context)
         {
-            Debug.Log("Click!");
+            if (biped.HeldWeapon == null) { return; }
+            if (context.performed)
+            {
+                biped.HeldWeapon.PullTrigger();
+            }
+            else
+            {
+                biped.HeldWeapon.ReleaseTrigger();
+            }
         }
 
         public virtual void SwapWeapons()
@@ -350,7 +358,7 @@ public class B_Biped : B_Shell
 
         public override void InteractionCheck() {}
 
-        public override void Fire()
+        public override void Fire(InputAction.CallbackContext context)
         {
             HeldObject.AddForce(biped._head.transform.forward * ThrowForce, ForceMode.VelocityChange);
             biped.ChangeState(biped._DefaultState);
@@ -507,7 +515,7 @@ public class B_Biped : B_Shell
 
     protected virtual void Fire(InputAction.CallbackContext context)
     {
-        _CurrentState.Fire();
+        _CurrentState.Fire(context);
     }
 
     protected virtual void SwapWeapons(InputAction.CallbackContext context)
@@ -647,14 +655,15 @@ public class B_Biped : B_Shell
     /// </summary>
     void DropWeapon()
     {
-        transform.parent = HeldWeapon.OriginalTransform;
+        HeldWeapon.transform.parent = HeldWeapon.OriginalTransform;
+        HeldWeapon.transform.position = _head.position + _head.forward * 0.5f;
         HeldWeapon.rb.isKinematic = false;
         foreach(Collider collider in HeldWeapon.Colliders)
         {
             collider.enabled = true;
         }
 
-        HeldWeapon.rb.AddForce(_head.transform.forward * 10);
+        HeldWeapon.rb.AddForce(_head.transform.forward * 500);
     }
 
     /*

@@ -9,9 +9,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 214497075804299232}
+  - component: {fileID: 1318216115418510814}
   - component: {fileID: 9108903474715442356}
   - component: {fileID: 1372248239660594520}
-  - component: {fileID: 3486186791579626151}
   m_Layer: 3
   m_Name: AK-47
   m_TagString: Untagged
@@ -35,6 +35,32 @@ Transform:
   - {fileID: 6845538380602621032}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1318216115418510814
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 339120520244200601}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bb239035a8ed224fbf8cfe4fa79d45e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  FiringMode:
+    rid: 2802157320383758369
+  ReloadMode:
+    rid: 2802157320383758370
+  references:
+    version: 2
+    RefIds:
+    - rid: 2802157320383758369
+      type: {class: FullyAutomatic, ns: , asm: Assembly-CSharp}
+      data:
+        RoundsPerMinute: 600
+    - rid: 2802157320383758370
+      type: {class: MagazineReload, ns: , asm: Assembly-CSharp}
+      data: 
 --- !u!65 &9108903474715442356
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -64,7 +90,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 339120520244200601}
   serializedVersion: 4
-  m_Mass: 1
+  m_Mass: 4
   m_Drag: 0
   m_AngularDrag: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -83,18 +109,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &3486186791579626151
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 339120520244200601}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8bb239035a8ed224fbf8cfe4fa79d45e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &6837923834982230700
 GameObject:
   m_ObjectHideFlags: 0
