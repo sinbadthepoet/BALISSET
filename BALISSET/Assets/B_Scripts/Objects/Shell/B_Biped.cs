@@ -468,7 +468,7 @@ public class B_Biped : B_Shell
 
     [SerializeField] Rigidbody _rb;
     [SerializeField] CapsuleCollider _capsuleCollider;
-    [SerializeField] Transform _head;
+    [SerializeField] public Transform _head;
 
     [SerializeField] float _headHeight = 0.8f;
     [SerializeField] float GroundCheckAdditionalDistance = 0.1f;

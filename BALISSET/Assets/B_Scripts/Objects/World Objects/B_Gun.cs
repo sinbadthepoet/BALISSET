@@ -17,6 +17,8 @@ public class B_Gun : B_Interactive
 
     #region Interaction
 
+    B_Biped Biped;
+
     public override string GetInteractionString()
     {
         return "Equip";
@@ -24,6 +26,7 @@ public class B_Gun : B_Interactive
 
     public override void Interact(B_Biped Interactor)
     {
+        Biped = Interactor;
         Interactor.PickUpWeapon(this);
     }
 
@@ -31,10 +34,12 @@ public class B_Gun : B_Interactive
 
     #region Gun
 
+    [SerializeField] GameObject _Projectile;
+    [SerializeField] Transform Muzzle;
+
     [SerializeReference] FiringModes FiringMode = new FullyAutomatic();
     [SerializeReference] ReloadModes ReloadMode = new MagazineReload();
 
-    [SerializeField] GameObject _Projectile;
 
     public void PullTrigger()
     {
@@ -49,7 +54,8 @@ public class B_Gun : B_Interactive
     public void Fire(GameObject proj = null)
     {
         if(proj == null) { proj = _Projectile; }
-        Instantiate(proj);
+
+        Instantiate(proj, Biped._head.position + Biped._head.transform.forward, Biped._head.rotation).GetComponent<Projectile>().Fire(Biped, 10000);
     }
 
     #endregion
@@ -74,6 +80,12 @@ public class B_Gun : B_Interactive
     void Update()
     {
         FiringMode.Update();
+    }
+
+    protected override void Reset()
+    {
+        base.Reset();
+        Muzzle = transform.Find("Muzzle");
     }
 
     #endregion

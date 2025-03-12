@@ -1,7 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-/*
+
 public interface BI_Damagable
 {
     /// <summary>
@@ -9,13 +10,24 @@ public interface BI_Damagable
     /// </summary>
     /// <param name="damage">100 Health represents a standard Biped.</param>
     /// <param name="source">The source of the damage. Used for kill attribution.</param>
-    public void Damage(int damage, object source);
+    public void ApplyDamage(Damage damage, B_Shell source);
 }
 
-struct Damage
+[Serializable]
+public struct Damage
 {
-    int DamageAmount;
-    DamageTypes DamageType;
-    B_Shell Source; //Null means it was the guardians.
+    public int DamageAmount;
+    public DamageTypes DamageType;
 }
-*/
+
+public enum DamageTypes
+{
+    Ballistic, //Bullets
+    Slashing, //Blades
+    Laser, //Uhh... scary lights
+
+    // Environmental
+    BluntForce, //Impact
+    Fire, //Hot Hot
+    Electric //Arcing Electricity, Electrified Pools
+}

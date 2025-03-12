@@ -10,6 +10,7 @@ public static class Layers
     public static readonly int Water = 4;
     public static readonly int UI = 5;
     public static readonly int Environment = 6;
+    public static readonly int BallisticsHitboxes = 7;
 
     public static int GetLayerMask(params int[] layers)
     {

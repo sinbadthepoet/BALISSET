@@ -22,7 +22,7 @@ public class PolymorphicDataDrawer : PropertyDrawer
 
         if (!cachedTypeNames.ContainsKey(fieldType))
         {
-            // Find all derived types of the base class
+            // Find all derived types of the base class.
             List<Type> subTypes = (List<Type>)typeof(PolymorphicData)
                 .GetMethod("GetAllDerivedTypes")?
                 .MakeGenericMethod(fieldType)

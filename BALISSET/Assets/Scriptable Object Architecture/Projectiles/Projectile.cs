@@ -4,7 +4,15 @@ using UnityEngine;
 
 public abstract class Projectile : MonoBehaviour
 {
-    float Damage;
+    [SerializeField] protected GameObject HitEffect;
+    protected B_Shell _Source { get; private set; }
 
-    abstract public void Fire();
+    /// <summary>
+    /// Set of all damage applied on hit.
+    /// Does not include effect field damage (explosions).
+    /// </summary>
+    [SerializeField] protected List<Damage> HitDamageSet;
+
+    abstract public void Fire(B_Shell Source, float Range);
+    abstract protected void OnImpact();
 }

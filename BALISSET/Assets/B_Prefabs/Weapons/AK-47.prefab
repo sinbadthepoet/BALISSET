@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 214497075804299232}
-  - component: {fileID: 1318216115418510814}
+  - component: {fileID: 738022476236802055}
   - component: {fileID: 9108903474715442356}
   - component: {fileID: 1372248239660594520}
   m_Layer: 3
@@ -35,7 +35,7 @@ Transform:
   - {fileID: 6845538380602621032}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1318216115418510814
+--- !u!114 &738022476236802055
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -47,18 +47,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8bb239035a8ed224fbf8cfe4fa79d45e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _Projectile: {fileID: 2173762776330128746, guid: 13815d0a7a1a5cf4fa18f7da30447221, type: 3}
+  Muzzle: {fileID: 7709665333571262145}
   FiringMode:
-    rid: 2802157320383758369
+    rid: 2802157328892166146
   ReloadMode:
-    rid: 2802157320383758370
+    rid: 2802157328892166147
   references:
     version: 2
     RefIds:
-    - rid: 2802157320383758369
+    - rid: 2802157328892166146
       type: {class: FullyAutomatic, ns: , asm: Assembly-CSharp}
       data:
         RoundsPerMinute: 600
-    - rid: 2802157320383758370
+    - rid: 2802157328892166147
       type: {class: MagazineReload, ns: , asm: Assembly-CSharp}
       data: 
 --- !u!65 &9108903474715442356
