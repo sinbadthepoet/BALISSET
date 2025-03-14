@@ -12,4 +12,6 @@ public class SemiAutomatic : FiringModes
         _Gun.Fire();
         TimeSinceLastShot = 0;
     }
+
+    public override void TriggerRelease() {}
 }

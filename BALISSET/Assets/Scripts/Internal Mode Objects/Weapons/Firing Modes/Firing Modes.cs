@@ -25,10 +25,11 @@ public abstract class FiringModes : PolymorphicData
         TimeBetweenShots = 60 / RoundsPerMinute;
     }
 
-    abstract public void TriggerPull();
-    public virtual void TriggerRelease() {}
     public virtual void Update()
     {
         TimeSinceLastShot += Time.deltaTime;
     }
+
+    abstract public void TriggerPull();
+    abstract public void TriggerRelease();
 }

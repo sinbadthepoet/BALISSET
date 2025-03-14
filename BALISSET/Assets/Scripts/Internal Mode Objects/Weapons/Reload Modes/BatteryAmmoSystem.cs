@@ -2,8 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BatteryAmsmoSystem : ReloadModes
+public class BatteryAmmoSystem : ReloadModes
 {
+    public override bool CanFire()
+    {
+        throw new System.NotImplementedException();
+    }
+
     public override void ChargeGun()
     {
         throw new System.NotImplementedException();

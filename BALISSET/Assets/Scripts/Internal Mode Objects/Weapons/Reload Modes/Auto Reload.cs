@@ -4,6 +4,11 @@ using UnityEngine;
 
 public class AutoReload : ReloadModes
 {
+    public override bool CanFire()
+    {
+        throw new System.NotImplementedException();
+    }
+
     public override void ChargeGun()
     {
         throw new System.NotImplementedException();

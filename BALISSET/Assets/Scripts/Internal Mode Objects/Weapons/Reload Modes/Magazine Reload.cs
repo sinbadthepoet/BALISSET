@@ -29,15 +29,12 @@ public class MagazineReload : ReloadModes
 
     public override void Reload()
     {
-        if(ReserveAmmo > MagazineCapacity)
+        int AmmoToLoad = MagazineCapacity - AmmoInMagazine;
+
+        if(AmmoToLoad <= ReserveAmmo)
         {
-            AmmoInMagazine = MagazineCapacity;
-            ReserveAmmo -= MagazineCapacity;
-        }
-        else
-        {
-            AmmoInMagazine = ReserveAmmo;
-            ReserveAmmo = 0;
+            ReserveAmmo -= AmmoToLoad;
+            AmmoInMagazine += AmmoToLoad;
         }
     }
 
@@ -57,5 +54,10 @@ public class MagazineReload : ReloadModes
     public override int GetReserveAmmo()
     {
         return ReserveAmmo;
+    }
+
+    public override bool CanFire()
+    {
+        return RoundChambered;
     }
 }

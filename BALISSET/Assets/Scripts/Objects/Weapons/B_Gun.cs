@@ -31,7 +31,7 @@ public class B_Gun : B_Interactive
     {
         if(proj == null) { proj = _Projectile; }
 
-        if (!ReloadMode.RoundChambered)
+        if (!ReloadMode.CanFire())
         {
             FiringMode.TriggerRelease();
             return;
@@ -49,6 +49,10 @@ public class B_Gun : B_Interactive
     public void Reload()
     {
         ReloadMode.Reload();
+        if (!GetRoundChambered())
+        {
+            ChargeGun();
+        }
     }
 
     #endregion

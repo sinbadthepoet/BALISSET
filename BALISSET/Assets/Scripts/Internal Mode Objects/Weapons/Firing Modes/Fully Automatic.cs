@@ -29,6 +29,6 @@ public class FullyAutomatic : FiringModes
     public override void Update()
     {
         base.Update();
-        TriggerAction?.Invoke(); //TODO: Swap all null action checks to empty functions;
+        TriggerAction?.Invoke();
     }
 }

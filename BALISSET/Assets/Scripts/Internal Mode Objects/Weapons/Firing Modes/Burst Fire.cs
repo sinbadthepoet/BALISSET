@@ -51,4 +51,6 @@ public class BurstFire : FiringModes
     {
         TimeSinceLastBurst += Time.deltaTime;
     }
+
+    public override void TriggerRelease() {}
 }

@@ -17,6 +17,8 @@ public abstract class ReloadModes : PolymorphicData
 
     abstract public void Reload();
 
+    abstract public bool CanFire();
+
     abstract public void GunFired();
 
     abstract public void Update();
