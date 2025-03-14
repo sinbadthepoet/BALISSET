@@ -6,11 +6,7 @@ public abstract class B_Ghost : MonoBehaviour
 {
     protected B_Shell _PossessedShell;
 
-    /// <summary>
-    /// Binds the Ghost to a new Shell, allowing it to be controlled.
-    /// Will release earlier possessed shell if one exists.
-    /// </summary>
-    protected virtual void Possess(B_Shell TargetShell)
+    public virtual void Possess(B_Shell TargetShell)
     {
         if (TargetShell == null)
         {
@@ -30,18 +26,13 @@ public abstract class B_Ghost : MonoBehaviour
         Debug.Log("Ghost " + gameObject.name + " has possessed Shell " + _PossessedShell.name);
     }
 
-    /// <summary>
-    /// Releases the Shell from possession.
-    /// </summary>
-    protected virtual void Release()
+    public virtual void Release()
     {
-        if (_PossessedShell != null)
-        {
-            _PossessedShell.Release();
-            _PossessedShell = null;
+        if (_PossessedShell == null) { return; }
+        _PossessedShell.Release();
+        _PossessedShell = null;
 
-            Debug.Log("Ghost " + gameObject.name + " has been released from Shell " + _PossessedShell.name);
-        }
+        Debug.Log("Ghost " + gameObject.name + " has been released from Shell " + _PossessedShell.name);
     }
 
     //TODO: this is temp behavior.

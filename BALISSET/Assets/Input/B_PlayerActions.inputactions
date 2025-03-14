@@ -2,7 +2,7 @@
     "name": "B_PlayerActions",
     "maps": [
         {
-            "name": "Biped",
+            "name": "Gameplay",
             "id": "fac12325-9665-49f1-a420-0d513b774e50",
             "actions": [
                 {
@@ -42,9 +42,18 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Sprint",
+                    "name": "Swap Weapons",
                     "type": "Button",
-                    "id": "de12bea8-20fa-4dc8-b102-48eb68e89854",
+                    "id": "6b5b4ffa-3dec-4511-8f8f-17516c20f613",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Reload",
+                    "type": "Button",
+                    "id": "05f5896d-243f-430f-b8bb-9a231737db89",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -60,27 +69,27 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Fire",
-                    "type": "Value",
-                    "id": "4f8c13c2-a8a5-40e5-97b8-977eb37fe64e",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": true
-                },
-                {
-                    "name": "Swap Weapons",
+                    "name": "Sprint",
                     "type": "Button",
-                    "id": "6b5b4ffa-3dec-4511-8f8f-17516c20f613",
+                    "id": "de12bea8-20fa-4dc8-b102-48eb68e89854",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Reload",
+                    "name": "Fire",
                     "type": "Button",
-                    "id": "05f5896d-243f-430f-b8bb-9a231737db89",
+                    "id": "4f8c13c2-a8a5-40e5-97b8-977eb37fe64e",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Aim",
+                    "type": "Button",
+                    "id": "e7195e5a-3949-4412-b765-288006c41cc4",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -244,28 +253,6 @@
                 },
                 {
                     "name": "",
-                    "id": "c49e3668-bf71-4c25-a21b-ca13aa0cc0ac",
-                    "path": "<Keyboard>/f",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Interact",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "6e496372-b924-48ff-80e0-d7ef74a19ed9",
-                    "path": "<Gamepad>/buttonWest",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Interact",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "b7eb7e05-cb96-47e9-ba2f-4799c390afaa",
                     "path": "<Mouse>/leftButton",
                     "interactions": "",
@@ -316,6 +303,39 @@
                     "processors": "",
                     "groups": "",
                     "action": "Reload",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "82a7b062-ad10-4a64-bcd7-907a5a17bcdd",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Aim",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c49e3668-bf71-4c25-a21b-ca13aa0cc0ac",
+                    "path": "<Keyboard>/f",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Interact",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "6e496372-b924-48ff-80e0-d7ef74a19ed9",
+                    "path": "<Gamepad>/buttonWest",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Interact",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
