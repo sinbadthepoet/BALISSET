@@ -5,8 +5,8 @@ using System.Text;
 
 public static class LayerTagGenerator
 {
-    private const string LAYERS_FILE_PATH = "Assets/B_Scripts/Generated/Layers.cs";
-    private const string TAGS_FILE_PATH = "Assets/B_Scripts/Generated/Tags.cs";
+    private const string LAYERS_FILE_PATH = "Assets/Generated/Layers.cs";
+    private const string TAGS_FILE_PATH = "Assets/Generated/Tags.cs";
 
     [MenuItem("Tools/Generate Layers and Tags")]
     public static void GenerateLayersAndTags()
