@@ -2,7 +2,7 @@
     "name": "B_PlayerActions",
     "maps": [
         {
-            "name": "OnFoot",
+            "name": "Biped",
             "id": "fac12325-9665-49f1-a420-0d513b774e50",
             "actions": [
                 {
