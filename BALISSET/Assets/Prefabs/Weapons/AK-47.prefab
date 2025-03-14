@@ -47,7 +47,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8bb239035a8ed224fbf8cfe4fa79d45e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _Projectile: {fileID: 2173762776330128746, guid: 13815d0a7a1a5cf4fa18f7da30447221, type: 3}
+  _Projectile: {fileID: 3558803676892471871, guid: 13815d0a7a1a5cf4fa18f7da30447221, type: 3}
   Muzzle: {fileID: 7709665333571262145}
   FiringMode:
     rid: 2802157328892166146

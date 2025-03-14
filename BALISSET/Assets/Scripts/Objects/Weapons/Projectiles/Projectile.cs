@@ -14,5 +14,4 @@ public abstract class Projectile : MonoBehaviour
     [SerializeField] protected List<Damage> HitDamageSet;
 
     abstract public void Fire(B_Shell Source, float Range);
-    abstract protected void OnImpact();
 }

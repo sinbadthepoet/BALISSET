@@ -17,7 +17,7 @@ public class HitscanProjectile : Projectile
         Destroy(gameObject);
     }
 
-    protected override void OnImpact()
+    void OnImpact()
     {
         Rigidbody rb = hitInfo.rigidbody;
         if(rb != null)

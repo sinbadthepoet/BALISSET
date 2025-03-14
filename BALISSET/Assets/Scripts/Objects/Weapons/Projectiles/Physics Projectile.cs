@@ -32,7 +32,7 @@ public class PhysicsProjectile : Projectile, BI_Damagable
     float ThrustDelayTimer = 0;
     [SerializeField] float SpinSpeed;
     [SerializeField] GameObject Detonation;
-    [SerializeField] float LifetimeSeconds;
+    //[SerializeField] float LifetimeSeconds;
 
     public override void Fire(B_Shell Source, float Range)
     {
@@ -93,11 +93,6 @@ public class PhysicsProjectile : Projectile, BI_Damagable
         if(FuseTimer < FuseTimeSeconds) { return; }
         Detonate();
     }
-
-    protected override void OnImpact()
-    {
-        throw new NotImplementedException();
-    }
     
     public void ApplyDamage(Damage damage, B_Shell source)
     {
@@ -122,9 +117,14 @@ public class PhysicsProjectile : Projectile, BI_Damagable
     void Reset()
     {
         rb = GetComponent<Rigidbody>();
+        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+    }
+
+    void OnValidate()
+    {
+        rb = GetComponent<Rigidbody>();
         rb.useGravity = UseGravity;
         rb.drag = Drag;
         rb.mass = Mass;
-        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
     }
 }
