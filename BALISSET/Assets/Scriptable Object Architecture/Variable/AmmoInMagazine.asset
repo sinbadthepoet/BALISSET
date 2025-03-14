@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5fc416aa13a1d504f98de4aae4e2d64b, type: 3}
-  m_Name: InteractionString
+  m_Script: {fileID: 11500000, guid: 274b3f9dcf23edc42aa1226934f34f24, type: 3}
+  m_Name: AmmoInMagazine
   m_EditorClassIdentifier: 
-  Value: 
+  Value: 0

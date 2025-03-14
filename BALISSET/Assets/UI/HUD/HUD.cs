@@ -3,23 +3,31 @@ using UnityEngine.UIElements;
 
 public class HUD : MonoBehaviour
 {
-    GameEventListener gameEventListener;
+    [SerializeField] StringReference InteractionString;
     Label InteractionLabel;
+
+    [SerializeField] IntReference AmmoCount;
+    Label AmmoInMagazine;
+    [SerializeField] IntReference ReserveCount;
+    Label ReserveAmmo;
+
+    // TODO: Separate Crosshair Visual Container and Crosshair object,
+    // Set crosshair to 0.7 opacity
 
     private void OnEnable()
     {
         // The UXML is already instantiated by the UIDocument component
         var uiDocument = GetComponent<UIDocument>();
 
-        gameEventListener = GetComponent<GameEventListener>();
-
-        //THIS WILL NOT LAST.
-        InteractionLabel = uiDocument.rootVisualElement.Q<Label>();
+        InteractionLabel = uiDocument.rootVisualElement.Q<Label>("Highlight");
+        AmmoInMagazine = uiDocument.rootVisualElement.Q<Label>("Loaded");
+        ReserveAmmo = uiDocument.rootVisualElement.Q<Label>("Reserve");
     }
-
-    public void UpdateInteractionString()
+    
+    void Update()
     {
-        var StringVar = gameEventListener.Event as AlertStringVariable;
-        InteractionLabel.text = StringVar.Value;
+        InteractionLabel.text = InteractionString.Value;
+        AmmoInMagazine.text = AmmoCount.Value.ToString();
+        ReserveAmmo.text = ReserveCount.Value.ToString();
     }
 }

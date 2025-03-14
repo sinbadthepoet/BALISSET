@@ -2901,6 +2901,8 @@ MonoBehaviour:
   _headHeight: 0.8
   GroundCheckAdditionalDistance: 0.1
   InteractionString: {fileID: 11400000, guid: ad23b2a22a0ea804cb75e5696520bb08, type: 2}
+  AmmoInMagazine: {fileID: 11400000, guid: 7845bec9cd8dd1247946fe37442cb02b, type: 2}
+  ReserveAmmo: {fileID: 11400000, guid: 720ef1242ba597a44b48640b84770345, type: 2}
   HeldWeaponViewmodelTransform: {fileID: 1417572065}
 --- !u!23 &1196392576
 MeshRenderer:
@@ -3463,7 +3465,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1417572065}
   m_Layer: 0
-  m_Name: Gun Held Position
+  m_Name: Gun Position
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4046,7 +4048,6 @@ GameObject:
   - component: {fileID: 1727854756}
   - component: {fileID: 1727854755}
   - component: {fileID: 1727854758}
-  - component: {fileID: 1727854757}
   m_Layer: 5
   m_Name: UIDocument
   m_TagString: Untagged
@@ -4085,34 +4086,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1727854757
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1727854753}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b811158ed8fdea5419649e155f5d4f28, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Event: {fileID: 11400000, guid: ad23b2a22a0ea804cb75e5696520bb08, type: 2}
-  Response:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1727854758}
-        m_TargetAssemblyTypeName: HUD, Assembly-CSharp
-        m_MethodName: UpdateInteractionString
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
 --- !u!114 &1727854758
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4125,6 +4098,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08cc5156cfd64384e9f8d7149dc63118, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  InteractionString:
+    UseConstant: 0
+    ConstantValue: 
+    Variable: {fileID: 11400000, guid: ad23b2a22a0ea804cb75e5696520bb08, type: 2}
+  AmmoString:
+    UseConstant: 0
+    ConstantValue: 36
+    Variable: {fileID: 11400000, guid: 7845bec9cd8dd1247946fe37442cb02b, type: 2}
+  ReserveString:
+    UseConstant: 0
+    ConstantValue: 360
+    Variable: {fileID: 11400000, guid: 720ef1242ba597a44b48640b84770345, type: 2}
 --- !u!1001 &1763152769
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4186,6 +4171,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 3379493430469056673, guid: e64fd591e7f97104ea1335314c3ad1a2, type: 3}
     - target: {fileID: 738022476236802055, guid: 561c0b752baea9d49976b3ff56e8c46f, type: 3}
+      propertyPath: StartingAmmo
+      value: 120
+      objectReference: {fileID: 0}
+    - target: {fileID: 738022476236802055, guid: 561c0b752baea9d49976b3ff56e8c46f, type: 3}
       propertyPath: managedReferences[2802157346162212864]
       value: Assembly-CSharp SemiAutomatic
       objectReference: {fileID: 0}
@@ -4194,12 +4183,24 @@ PrefabInstance:
       value: Assembly-CSharp FullyAutomatic
       objectReference: {fileID: 0}
     - target: {fileID: 738022476236802055, guid: 561c0b752baea9d49976b3ff56e8c46f, type: 3}
+      propertyPath: managedReferences[2802157328892166147].ReloadTime
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 738022476236802055, guid: 561c0b752baea9d49976b3ff56e8c46f, type: 3}
+      propertyPath: managedReferences[2802157328892166147].ReserveAmmo
+      value: 180
+      objectReference: {fileID: 0}
+    - target: {fileID: 738022476236802055, guid: 561c0b752baea9d49976b3ff56e8c46f, type: 3}
       propertyPath: managedReferences[2802157346162212864].RoundsPerMinute
       value: 600
       objectReference: {fileID: 0}
     - target: {fileID: 738022476236802055, guid: 561c0b752baea9d49976b3ff56e8c46f, type: 3}
       propertyPath: managedReferences[2802157346162212865].RoundsPerMinute
       value: 600
+      objectReference: {fileID: 0}
+    - target: {fileID: 738022476236802055, guid: 561c0b752baea9d49976b3ff56e8c46f, type: 3}
+      propertyPath: managedReferences[2802157328892166147].MagazineCapacity
+      value: 30
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -5109,7 +5110,7 @@ Transform:
   m_GameObject: {fileID: 2073008386}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.589, z: 0}
+  m_LocalPosition: {x: 0, y: 0.8, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
