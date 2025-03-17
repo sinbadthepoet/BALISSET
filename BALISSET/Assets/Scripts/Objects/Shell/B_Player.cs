@@ -17,4 +17,10 @@ public class B_Player : B_Biped
             InteractionString.Value = lookedAtInteractive.GetInteractionString();
         }
     }
+
+    protected override void Reset()
+    {
+        base.Reset();
+        tag = Tags.Player;
+    }
 }

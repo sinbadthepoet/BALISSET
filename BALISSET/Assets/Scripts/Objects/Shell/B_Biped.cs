@@ -9,16 +9,17 @@ using UnityEngine.ProBuilder.Shapes;
 [RequireComponent(typeof(CapsuleCollider))]
 public class B_Biped : B_Shell
 {
-    [SerializeField] Rigidbody rb;
-    [SerializeField] CapsuleCollider capsuleCollider;
+    [SerializeField] [HideInInspector] Rigidbody rb;
+    [SerializeField] [HideInInspector] CapsuleCollider capsuleCollider;
     
-    [SerializeField] Transform head;
+    [SerializeField] [HideInInspector] Transform head;
     [SerializeField] float headHeight = 0.8f;
 
     [SerializeField] float GroundCheckAdditionalDistance = 0.1f;
+    [SerializeField] LayerMaskConfig layerMasks;
 
-    [SerializeField] Transform heldObjectPosition;
-    [SerializeField] Transform heldWeaponViewmodelTransform;
+    [SerializeField] [HideInInspector] Transform heldObjectPosition;
+    [SerializeField] [HideInInspector] Transform heldWeaponViewmodelTransform;
 
     [SerializeField] float Mass = 90.0f;
 
@@ -40,7 +41,8 @@ public class B_Biped : B_Shell
     BipedHoldingPropState holdingPropState;
 
     InputAction movementInput;
-    InputAction lookInput;
+    InputAction mouseLookInput;
+    InputAction analogStickLookInput;
 
     RaycastHit interactionCheckHit;
     protected B_Interactive lookedAtInteractive;
@@ -55,9 +57,14 @@ public class B_Biped : B_Shell
         movementInput = action;
     }
 
-    void BindLook(InputAction action)
+    void BindMouseLook(InputAction action)
     {
-        lookInput = action;
+        mouseLookInput = action;
+    }
+
+    void BindAnalogStickLook(InputAction action)
+    {
+        analogStickLookInput = action;
     }
 
     void Jump(InputAction.CallbackContext ctx)
@@ -177,7 +184,8 @@ public class B_Biped : B_Shell
         base.InitializeActions();
 
         ShellActions.Add("Movement", new ActionForBinding(null, BindMovement, ActionType.Values));
-        ShellActions.Add("Look", new ActionForBinding(null, BindLook, ActionType.Values));
+        ShellActions.Add("Mouse Look", new ActionForBinding(null, BindMouseLook, ActionType.Values));
+        ShellActions.Add("Stick Look", new ActionForBinding(null, BindAnalogStickLook, ActionType.Values));
 
         ShellActions.Add("Jump", new ActionForBinding(Jump, null, ActionType.Button));
         ShellActions.Add("Crouch", new ActionForBinding(Crouch, null, ActionType.Button));
@@ -256,7 +264,7 @@ public class B_Biped : B_Shell
         currentWeaponState.InteractionCheck();
     }
 
-    void Reset()
+    protected virtual void Reset()
     {
         rb = GetComponent<Rigidbody>();
 
@@ -326,15 +334,15 @@ public class B_Biped : B_Shell
 
         public virtual void ExitState() {}
 
-        public virtual void Update()
+        public virtual void Update() {}
+
+        public virtual void FixedUpdate()
         {
             if (!biped.GroundCheck())
             {
                 biped.ChangeMovementState(biped.fallingState);
             }
         }
-
-        public virtual void FixedUpdate() {}
 
         //INTERNAL
 
@@ -372,12 +380,13 @@ public class B_Biped : B_Shell
 
         public virtual void Look()
         {
-            var Input = biped.lookInput.ReadValue<Vector2>();
+            //TODO: Figure out Sensitivity Scaling
+            Vector2 Input = biped.mouseLookInput.ReadValue<Vector2>();
+            Input += biped.analogStickLookInput.ReadValue<Vector2>() * Time.deltaTime;
 
             Quaternion HorizontalElement = Quaternion.Euler(0, Input.x, 0);
             biped.rb.MoveRotation(biped.transform.rotation * HorizontalElement);
 
-            //TODO: Controller Input needs to be scaled by Time.deltaTime, but not mouse.
             biped.headPitch -= Input.y;
             biped.headPitch = Mathf.Clamp(biped.headPitch, -biped.lookAngleMax, biped.lookAngleMax);
             biped.head.localRotation = Quaternion.Euler(biped.headPitch, 0, 0);
@@ -442,7 +451,7 @@ public class B_Biped : B_Shell
             airDrag = 0.0f;
         }
 
-        public override void Update()
+        public override void FixedUpdate()
         {
             if (biped.GroundCheck())
             {
@@ -534,8 +543,7 @@ public class B_Biped : B_Shell
 
         public virtual void InteractionCheck()
         {
-            var Mask = Layers.GetLayerMask(Layers.Interactive, Layers.Environment);
-            bool Hit = Physics.SphereCast(biped.head.position, interactionSphereCastRadius, biped.head.forward, out biped.interactionCheckHit, interactionSphereCastMaxDistance, Mask);
+            bool Hit = Physics.SphereCast(biped.head.position, interactionSphereCastRadius, biped.head.forward, out biped.interactionCheckHit, interactionSphereCastMaxDistance, biped.layerMasks.interactive);
 
             if (!Hit) { return; }
 
