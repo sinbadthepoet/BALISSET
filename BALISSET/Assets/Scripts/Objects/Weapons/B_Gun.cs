@@ -96,7 +96,7 @@ public class B_Gun : B_Interactive
     public override void Interact(B_Biped Interactor)
     {
         Biped = Interactor;
-        Interactor.PickUpWeapon(this);
+        //Interactor.PickUpWeapon(this);
     }
 
     #endregion

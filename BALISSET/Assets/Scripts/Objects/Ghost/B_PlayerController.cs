@@ -20,7 +20,7 @@ public class B_PlayerController : B_Ghost
             return;
         }
 
-        var ShellActions = _PossessedShell.GrabActions();
+        var ShellActions = _PossessedShell.ShellActions;
         var unsupportedActions = new List<string>();
 
         //TODO: Menu Maps might mix this up.
@@ -30,7 +30,7 @@ public class B_PlayerController : B_Ghost
 
             foreach (var action in map.actions)
             {
-                if(ShellActions.TryGetValue(action.name, out var actionStruct))
+                if (ShellActions != null && ShellActions.TryGetValue(action.name, out var actionStruct))
                 {
                     switch (actionStruct.actionType)
                     {
@@ -93,7 +93,7 @@ public class B_PlayerController : B_Ghost
     }
 }
 
-enum ActionType
+public enum ActionType
 {
     Button,
     OnOff,

@@ -14,7 +14,7 @@ public class B_PhysicsProp : B_Interactive
 
     public override void Interact(B_Biped Interactor)
     {
-        Interactor.GrabObject(rb);
+        //Interactor.GrabObject(rb);
     }
 
     protected override void Reset()
