@@ -29,10 +29,12 @@ public abstract class B_Ghost : MonoBehaviour
     public virtual void Release()
     {
         if (_PossessedShell == null) { return; }
+
         _PossessedShell.Release();
-        _PossessedShell = null;
 
         Debug.Log("Ghost " + gameObject.name + " has been released from Shell " + _PossessedShell.name);
+
+        _PossessedShell = null;
     }
 
     //TODO: this is temp behavior.

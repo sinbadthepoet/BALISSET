@@ -35,10 +35,20 @@ public class B_PlayerController : B_Ghost
                     switch (actionStruct.actionType)
                     {
                         case ActionType.Button:
+                            if (actionStruct.action == null)
+                            {
+                                Debug.Log($"Attemped to bind {action.name}, but no action function was found.");
+                                break;
+                            }
                             action.performed += actionStruct.action;
                             break;
 
                         case ActionType.OnOff:
+                            if (actionStruct.action == null)
+                            {
+                                Debug.Log($"Attemped to bind {action.name}, but no action function was found.");
+                                break;
+                            }
                             action.performed += actionStruct.action;
                             action.canceled += actionStruct.action;
                             break;
@@ -102,6 +112,13 @@ public enum ActionType
 
 public struct ActionForBinding
 {
+    public ActionForBinding(Action<InputAction.CallbackContext> ActionFunction, Action<InputAction> ValueBindingFunction, ActionType aType)
+    {
+        action = ActionFunction;
+        BindValue = ValueBindingFunction;
+        actionType = aType;
+    }
+
     public Action<InputAction.CallbackContext> action;
     public Action<InputAction> BindValue;
     public ActionType actionType;
