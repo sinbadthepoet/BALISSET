@@ -6,7 +6,7 @@ using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(Collider))]
-public class PhysicsProjectile : Projectile, BI_Damagable
+public class PhysicsProjectile : Projectile, IDamagable
 {
     enum FuseType
     {
@@ -66,7 +66,7 @@ public class PhysicsProjectile : Projectile, BI_Damagable
     {
         if (collision.impulse.magnitude > TriggerForce)
         {
-            var DamageInterface = collision.gameObject.GetComponent<BI_Damagable>();
+            var DamageInterface = collision.gameObject.GetComponent<IDamagable>();
             if (DamageInterface != null)
             {
                 foreach(Damage damage in HitDamageSet)

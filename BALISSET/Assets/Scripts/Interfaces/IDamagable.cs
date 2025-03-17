@@ -3,13 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public interface BI_Damagable
+public interface IDamagable
 {
-    /// <summary>
-    /// Damages the entity.
-    /// </summary>
-    /// <param name="damage">100 Health represents a standard Biped.</param>
-    /// <param name="source">The source of the damage. Used for kill attribution.</param>
     public void ApplyDamage(Damage damage, B_Shell source);
 }
 

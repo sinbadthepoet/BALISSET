@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 482f78ffd13b66b4bb5b653da10f286e, type: 3}
   m_Name: Primary Layer Mask Configuration
   m_EditorClassIdentifier: 
-  interactiveLayerMask:
+  interactive:
     serializedVersion: 2
-    m_Bits: 0
-  groundCheckLayerMask:
+    m_Bits: 72
+  groundCheck:
     serializedVersion: 2
-    m_Bits: 0
-  damageLayerMask:
+    m_Bits: 72
+  damage:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 192

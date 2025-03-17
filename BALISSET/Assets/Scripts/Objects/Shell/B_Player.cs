@@ -12,7 +12,18 @@ public class B_Player : B_Biped
     protected override void FixedUpdate()
     {
         base.FixedUpdate();
-        if(lookedAtInteractive != null)
+        InteractionStringUIUpdate();
+
+        Debug.Log(rb.velocity.magnitude);
+    }
+
+    void InteractionStringUIUpdate()
+    {
+        if (lookedAtInteractive == null)
+        {
+            InteractionString.Value = "";
+        }
+        else
         {
             InteractionString.Value = lookedAtInteractive.GetInteractionString();
         }

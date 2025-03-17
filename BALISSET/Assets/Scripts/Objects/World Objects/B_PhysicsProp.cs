@@ -3,24 +3,27 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
-public class B_PhysicsProp : B_Interactive
+public class B_PhysicsProp : MonoBehaviour, IInteractive
 {
-    [SerializeField] Rigidbody rb;
+    [SerializeField] [HideInInspector] Rigidbody rb;
 
-    public override string GetInteractionString()
+    public string GetInteractionString()
     {
         return "Pick Up";
     }
 
-    public override void Interact(B_Biped Interactor)
+    public void Interact(B_Shell Interactor)
     {
-        //Interactor.GrabObject(rb);
+        if(Interactor is B_Biped biped)
+        {
+            biped.GrabPhysicsProp(rb);
+        }
     }
 
-    protected override void Reset()
+    void Reset()
     {
-        base.Reset();
-        gameObject.tag = Tags.PhysicsProp;
+        gameObject.layer = Layers.Interactive;
+        tag = Tags.PhysicsProp;
         rb = GetComponent<Rigidbody>();
     }
 }

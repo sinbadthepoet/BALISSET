@@ -5,7 +5,7 @@ using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(Collider))]
-public class B_Gun : B_Interactive
+public class B_Gun : MonoBehaviour, IInteractive
 {
     #region Gun
 
@@ -88,17 +88,6 @@ public class B_Gun : B_Interactive
 
     B_Biped Biped;
 
-    public override string GetInteractionString()
-    {
-        return "Equip";
-    }
-
-    public override void Interact(B_Biped Interactor)
-    {
-        Biped = Interactor;
-        //Interactor.PickUpWeapon(this);
-    }
-
     #endregion
 
     #region Unity Events
@@ -122,12 +111,19 @@ public class B_Gun : B_Interactive
     void Update()
     {
         FiringMode.Update();
+        //Put in Reset
+        Muzzle = transform.Find("Muzzle");
     }
 
-    protected override void Reset()
+    
+    public void Interact(B_Shell Interactor)
     {
-        base.Reset();
-        Muzzle = transform.Find("Muzzle");
+        throw new NotImplementedException();
+    }
+
+    public string GetInteractionString()
+    {
+        throw new NotImplementedException();
     }
 
     #endregion

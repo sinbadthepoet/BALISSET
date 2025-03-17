@@ -25,7 +25,7 @@ public class HitscanProjectile : Projectile
             rb.AddForceAtPosition(transform.forward * HitForce, hitInfo.point);
         }
 
-        var DamagedObject = hitInfo.collider.GetComponent<BI_Damagable>();
+        var DamagedObject = hitInfo.collider.GetComponent<IDamagable>();
         if(DamagedObject != null)
         {
             foreach(Damage damage in HitDamageSet)
