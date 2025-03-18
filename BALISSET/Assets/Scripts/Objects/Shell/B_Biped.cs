@@ -10,41 +10,7 @@ using UnityEngine.ProBuilder.Shapes;
 [RequireComponent(typeof(CapsuleCollider))]
 public class B_Biped : B_Shell
 {
-    [SerializeField] float mass = 90.0f;
-    [SerializeField] float headHeight = 0.8f;
-    [SerializeField] float lookAngleMax = 90;
-
-    [SerializeField] float movementSpeed = 2;
-    [SerializeField] float movementAcceleration = 50;
-    [SerializeField] float standingHeight = 2;
-    [SerializeField] float groundDrag = 5;
-
-    [SerializeField] float crouchedHeight = 1;
-    [SerializeField] float crouchedSpeedScalar = 0.5f;
-    [SerializeField] float crouchedAccelerationScalar = 0.3f;
-
-    [SerializeField] float jumpHeight = 1;
-    [SerializeField] float airAccelerationScalar = 0.05f;
-    [SerializeField] float airDrag = 0;
-
-    [SerializeField] float sprintingSpeed = 5;
-    [SerializeField] float sprintingAccelerationScalar = 0.7f;
-    [SerializeField] float sprintMinimumSpeed = 1.75f;
-    [SerializeField] float sprintingLateralInputScalar = 0.2f;
-    [SerializeField] float sprintingDrag = 5;
-
-    [SerializeField] float groundCheckAdditionalDistance = -0.35f;
-
-    [SerializeField] float interactionSphereCastRadius = 0.1f;
-    [SerializeField] float interactionSphereCastDistance = 3.0f;
-
-    [SerializeField] float grabSpringForceStrength = 50;
-    [SerializeField] float grabTorqueForceStrength = 50;
-    [SerializeField] float grabbedObjectDrag = 30;
-    [SerializeField] float grabbedObjectAngularDrag = 30;
-    [SerializeField] float grabAutomaticReleaseDistance = 5;
-    [SerializeField] float grabbedThrowSpeed = 20;
-    [SerializeField] float grabbedReleaseMaxSpeed = 20;
+    [SerializeField] BipedStats stats;
 
     [SerializeField] LayerMaskConfig layerMasks;
 
@@ -251,7 +217,7 @@ public class B_Biped : B_Shell
 
     bool GroundCheck()
     {
-        return Physics.SphereCast(transform.position, capsuleCollider.radius * 0.8f, transform.TransformDirection(Vector3.down), out _, capsuleCollider.height / 2 + groundCheckAdditionalDistance);
+        return Physics.SphereCast(transform.position, capsuleCollider.radius * 0.8f, transform.TransformDirection(Vector3.down), out _, capsuleCollider.height / 2 + stats.groundCheckAdditionalDistance);
     }
     
     void DropWeapon()
@@ -304,7 +270,7 @@ public class B_Biped : B_Shell
     {
         rb = GetComponent<Rigidbody>();
 
-        rb.mass = mass;
+        rb.mass = stats.mass;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
         rb.freezeRotation = true;
         rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
@@ -317,7 +283,7 @@ public class B_Biped : B_Shell
             head = new GameObject("Head").transform;
         }
         head.parent = transform;
-        head.localPosition = new Vector3(0, headHeight, 0);
+        head.localPosition = new Vector3(0, stats.headHeight, 0);
 
         heldWeaponViewmodelTransform = head.Find("Gun Position");
         if (heldWeaponViewmodelTransform == null)
@@ -338,8 +304,8 @@ public class B_Biped : B_Shell
 
     void OnValidate()
     {
-        head.localPosition = new Vector3(0, headHeight, 0);
-        rb.mass = mass;
+        head.localPosition = new Vector3(0, stats.headHeight, 0);
+        rb.mass = stats.mass;
     }
 
     #endregion
@@ -349,36 +315,20 @@ public class B_Biped : B_Shell
     class BipedMovementState
     {
         protected B_Biped biped;
-
-        public float movementSpeed;
-        public float movementAcceleration;
-        public float movementForce;
-
-        public float bipedHeight;
-        public float groundDrag;
-
-        public float sprintMinimumSpeed;
-        public float jumpVelocity;
+        protected Func<float> GetMovementForce;
+        protected Func<float> GetMovementSpeed;
 
         public BipedMovementState(B_Biped Biped)
         {
             biped = Biped;
-
-            movementSpeed = biped.movementSpeed;
-            movementAcceleration = biped.movementAcceleration;
-            CalculateMovementForce();
-
-            bipedHeight = biped.standingHeight;
-            groundDrag = biped.groundDrag;
-
-            sprintMinimumSpeed = biped.sprintMinimumSpeed;
-            jumpVelocity = MathF.Sqrt(-2 * Physics.gravity.y * biped.jumpHeight);
+            GetMovementForce = (() => biped.stats.movementForce);
+            GetMovementSpeed = (() => biped.stats.movementSpeed);
         }
 
         public virtual void EnterState()
         {
-            biped.rb.drag = groundDrag;
-            biped.capsuleCollider.height = bipedHeight;
+            biped.rb.drag = biped.stats.groundDrag;
+            biped.capsuleCollider.height = biped.stats.standingHeight;
         }
 
         public virtual void ExitState() {}
@@ -393,26 +343,12 @@ public class B_Biped : B_Shell
             }
         }
 
-        //INTERNAL
-
-        void CalculateMovementForce()
-        {
-            movementForce = biped.rb.mass * movementAcceleration;
-        }
-
-        public float GetMovementAcceleration() { return movementAcceleration; }
-        public void SetMovementAcceleration(float Acceleration)
-        {
-            movementAcceleration = Acceleration;
-            CalculateMovementForce();
-        }
-
         //ACTIONS
 
         public virtual void Move()
         {
             Vector2 Input = biped.movementInput.ReadValue<Vector2>();
-            Vector3 MovementForce = new Vector3(Input.x, 0, Input.y) * movementForce;
+            Vector3 MovementForce = new Vector3(Input.x, 0, Input.y) * GetMovementForce.Invoke();
 
             biped.rb.AddRelativeForce(MovementForce, ForceMode.Force);
             SpeedCap();
@@ -422,9 +358,9 @@ public class B_Biped : B_Shell
         {
             var BipedVelocity = biped.rb.velocity;
             Vector3 PlanarVelocity = new Vector3(BipedVelocity.x, 0, BipedVelocity.z);
-            if (PlanarVelocity.magnitude > movementSpeed)
+            if (PlanarVelocity.magnitude > GetMovementSpeed.Invoke())
             {
-                PlanarVelocity = PlanarVelocity.normalized * movementSpeed;
+                PlanarVelocity = PlanarVelocity.normalized * GetMovementSpeed.Invoke();
                 Vector3 CappedVelocity = new Vector3(PlanarVelocity.x, BipedVelocity.y, PlanarVelocity.z);
                 biped.rb.velocity = CappedVelocity;
             }
@@ -440,13 +376,13 @@ public class B_Biped : B_Shell
             biped.rb.MoveRotation(biped.transform.rotation * HorizontalElement);
 
             biped.headPitch -= Input.y;
-            biped.headPitch = Mathf.Clamp(biped.headPitch, -biped.lookAngleMax, biped.lookAngleMax);
+            biped.headPitch = Mathf.Clamp(biped.headPitch, -biped.stats.lookAngleMax, biped.stats.lookAngleMax);
             biped.head.localRotation = Quaternion.Euler(biped.headPitch, 0, 0);
         }
 
         public virtual void Jump()
         {
-            biped.rb.AddRelativeForce(Vector3.up * jumpVelocity, ForceMode.VelocityChange);
+            biped.rb.AddRelativeForce(Vector3.up * biped.stats.jumpVelocity, ForceMode.VelocityChange);
         }
 
         public virtual void Crouch()
@@ -457,7 +393,7 @@ public class B_Biped : B_Shell
         public virtual void Sprint()
         {
             var localVelocity = biped.transform.InverseTransformDirection(biped.rb.velocity);
-            if(localVelocity.z > sprintMinimumSpeed)
+            if(localVelocity.z > biped.stats.sprintMinimumSpeed)
             {
                 biped.ChangeMovementState(biped.sprintingState);
             }
@@ -466,24 +402,21 @@ public class B_Biped : B_Shell
 
     class BipedCrouchedState : BipedMovementState
     {
-        float crouchedHeight;
-
         public BipedCrouchedState(B_Biped biped) : base(biped)
         {
-            movementSpeed *= biped.crouchedSpeedScalar;
-            SetMovementAcceleration(GetMovementAcceleration() * biped.crouchedAccelerationScalar);
-            crouchedHeight = biped.crouchedHeight;
+            GetMovementForce = (() => biped.stats.crouchedMovementForce);
+            GetMovementSpeed = (() => biped.stats.crouchedSpeed);
         }
 
         public override void EnterState()
         {
-            biped.capsuleCollider.height = crouchedHeight;
+            biped.capsuleCollider.height = biped.stats.crouchedHeight;
             biped.transform.position -= new Vector3(0, 0.5f, 0);
         }
 
         public override void ExitState()
         {
-            biped.capsuleCollider.height = bipedHeight;
+            biped.capsuleCollider.height = biped.stats.standingHeight;
         }
 
         public override void Crouch()
@@ -494,12 +427,9 @@ public class B_Biped : B_Shell
 
     class BipedFallingState : BipedMovementState
     {
-        float airDrag;
-
         public BipedFallingState(B_Biped biped) : base(biped)
         {
-            SetMovementAcceleration(GetMovementAcceleration() * biped.airAccelerationScalar);
-            airDrag = biped.airDrag;
+            GetMovementForce = (() => biped.stats.airMovementForce);
         }
 
         public override void FixedUpdate()
@@ -512,12 +442,12 @@ public class B_Biped : B_Shell
 
         public override void EnterState()
         {
-            biped.rb.drag = airDrag;
+            biped.rb.drag = biped.stats.airDrag;
         }
 
         public override void ExitState()
         {
-            biped.rb.drag = groundDrag;
+            biped.rb.drag = biped.stats.groundDrag;
         }
 
         public override void Crouch() {}
@@ -533,18 +463,18 @@ public class B_Biped : B_Shell
     {
         public BipedSprintingState(B_Biped biped) : base(biped)
         {
-            movementSpeed = biped.sprintingSpeed;
-            SetMovementAcceleration(GetMovementAcceleration() * biped.sprintingAccelerationScalar);
+            GetMovementForce = (() => biped.stats.sprintForce);
+            GetMovementSpeed = (() => biped.stats.sprintingSpeed);
         }
 
         public override void EnterState()
         {
-            biped.rb.drag = biped.sprintingDrag;
+            biped.rb.drag = biped.stats.sprintingDrag;
         }
 
         public override void ExitState()
         {
-            biped.rb.drag = groundDrag;
+            biped.rb.drag = biped.stats.groundDrag;
         }
 
         public override void Update()
@@ -552,7 +482,7 @@ public class B_Biped : B_Shell
             base.Update();
 
             var localVelocity = biped.transform.InverseTransformDirection(biped.rb.velocity);
-            if (localVelocity.z < sprintMinimumSpeed)
+            if (localVelocity.z < biped.stats.sprintMinimumSpeed)
             {
                 biped.ChangeMovementState(biped.defaultMovementState);
             }
@@ -561,9 +491,9 @@ public class B_Biped : B_Shell
         public override void Move()
         {
             Vector2 Input = biped.movementInput.ReadValue<Vector2>();
-            Input.Scale(new Vector2(biped.sprintingLateralInputScalar, 1));
+            Input.Scale(new Vector2(biped.stats.sprintingLateralInputScalar, 1));
 
-            Vector3 MovementForce = new Vector3(Input.x, 0, Input.y) * movementForce;
+            Vector3 MovementForce = new Vector3(Input.x, 0, Input.y) * GetMovementForce.Invoke();
 
             biped.rb.AddRelativeForce(MovementForce, ForceMode.Force);
             SpeedCap();
@@ -581,15 +511,9 @@ public class B_Biped : B_Shell
     {
         protected B_Biped biped;
 
-        float interactionSphereCastRadius;
-        float interactionSphereCastDistance;
-
         public BipedWeaponState(B_Biped Biped)
         {
             biped = Biped;
-
-            interactionSphereCastRadius = biped.interactionSphereCastRadius;
-            interactionSphereCastDistance = biped.interactionSphereCastDistance;
         }
 
         public virtual void EnterState()
@@ -619,7 +543,7 @@ public class B_Biped : B_Shell
 
         public virtual void InteractionCheck()
         {
-            bool Hit = Physics.SphereCast(biped.head.position, interactionSphereCastRadius, biped.head.forward, out biped.interactionCheckHit, interactionSphereCastDistance, biped.layerMasks.interactive);
+            bool Hit = Physics.SphereCast(biped.head.position, biped.stats.interactionSphereCastRadius, biped.head.forward, out biped.interactionCheckHit, biped.stats.interactionSphereCastDistance, biped.layerMasks.interactive);
 
             if (!Hit)
             {
@@ -702,28 +626,13 @@ public class B_Biped : B_Shell
     class BipedHoldingPropState : BipedWeaponState
     {
         //hehe... propstate
-
         Rigidbody HeldObject;
         float OriginalDrag;
         float OriginalAngularDrag;
 
-        float SpringForceStrength;
-        float TorqueForceStrength;
-        float NewDrag;
-        float NewAngularDrag;
-        float AutomaticReleaseDistance;
-        float ThrowSpeed;
-        float MaxLetGoSpeed;
-
         public BipedHoldingPropState(B_Biped biped) : base(biped)
         {
-            SpringForceStrength = biped.grabSpringForceStrength;
-            TorqueForceStrength = biped.grabTorqueForceStrength;
-            NewDrag = biped.grabbedObjectDrag;
-            NewAngularDrag = biped.grabbedObjectAngularDrag;
-            AutomaticReleaseDistance = biped.grabAutomaticReleaseDistance;
-            ThrowSpeed = biped.grabbedThrowSpeed;
-            MaxLetGoSpeed = biped.grabbedReleaseMaxSpeed;
+
         }
 
         public override void EnterState()
@@ -739,7 +648,7 @@ public class B_Biped : B_Shell
 
         public override void Fire(InputAction.CallbackContext context)
         {
-            HeldObject.AddForce(biped.head.transform.forward * ThrowSpeed, ForceMode.VelocityChange);
+            HeldObject.AddForce(biped.head.transform.forward * biped.stats.grabbedThrowSpeed, ForceMode.VelocityChange);
             biped.ChangeWeaponState(biped.previousWeaponState);
         }
 
@@ -750,10 +659,10 @@ public class B_Biped : B_Shell
             HeldObject.interpolation = RigidbodyInterpolation.Interpolate;
 
             OriginalDrag = HeldObject.drag;
-            HeldObject.drag = NewDrag;
+            HeldObject.drag = biped.stats.grabbedObjectDrag;
 
             OriginalAngularDrag = HeldObject.angularDrag;
-            HeldObject.angularDrag = NewAngularDrag;
+            HeldObject.angularDrag = biped.stats.grabbedObjectAngularDrag;
         }
 
         public override void ExitState()
@@ -774,17 +683,17 @@ public class B_Biped : B_Shell
             Vector3 DesiredPosition = biped.heldObjectPosition.position;
             Quaternion DesiredRotation = biped.head.transform.rotation * Quaternion.identity; //Local Identity to World Space Quaternion.
 
-            if (Vector3.Distance(DesiredPosition, HeldObject.position) > AutomaticReleaseDistance)
+            if (Vector3.Distance(DesiredPosition, HeldObject.position) > biped.stats.grabAutomaticReleaseDistance)
             {
                 biped.ChangeWeaponState(biped.previousWeaponState);
                 return;
             }
 
             Vector3 Force = DesiredPosition - HeldObject.transform.position;
-            Force *= SpringForceStrength;
+            Force *= biped.stats.grabSpringForceStrength;
 
             Quaternion DeltaRotation = DesiredRotation * Quaternion.Inverse(HeldObject.transform.rotation);
-            Vector3 Torque = new Vector3(DeltaRotation.x, DeltaRotation.y, DeltaRotation.z) * TorqueForceStrength;
+            Vector3 Torque = new Vector3(DeltaRotation.x, DeltaRotation.y, DeltaRotation.z) * biped.stats.grabTorqueForceStrength;
 
             HeldObject.AddForce(Force, ForceMode.VelocityChange);
             HeldObject.AddTorque(Torque, ForceMode.VelocityChange);
@@ -805,7 +714,7 @@ public class B_Biped : B_Shell
         {
             var prop = HeldObject;
             biped.ChangeWeaponState(biped.previousWeaponState);
-            prop.velocity = Vector3.ClampMagnitude(prop.velocity, MaxLetGoSpeed);
+            prop.velocity = Vector3.ClampMagnitude(prop.velocity, biped.stats.grabbedReleaseMaxSpeed);
         }
 
         public override void Reload() {}

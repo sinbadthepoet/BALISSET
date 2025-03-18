@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 109513ad3e4f0ec42a6f93706150d561, type: 3}
+  m_Name: Default Biped Stats
+  m_EditorClassIdentifier: 
+  mass: 90
+  headHeight: 0.8
+  lookAngleMax: 90
+  movementSpeed: 2
+  movementAcceleration: 50
+  standingHeight: 2
+  groundDrag: 5
+  crouchedHeight: 1
+  crouchedSpeed: 1
+  crouchedAcceleration: 15
+  jumpHeight: 1
+  airAcceleration: 2.5
+  airDrag: 0
+  sprintingSpeed: 5
+  sprintingAcceleration: 35
+  sprintMinimumSpeed: 1.75
+  sprintingLateralInputScalar: 0.2
+  sprintingDrag: 5
+  groundCheckAdditionalDistance: -0.35
+  interactionSphereCastRadius: 0.1
+  interactionSphereCastDistance: 3
+  grabSpringForceStrength: 50
+  grabTorqueForceStrength: 50
+  grabbedObjectDrag: 30
+  grabbedObjectAngularDrag: 30
+  grabAutomaticReleaseDistance: 5
+  grabbedThrowSpeed: 20
+  grabbedReleaseMaxSpeed: 20

@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.ProBuilder.Shapes;
 
 [CreateAssetMenu]
 public class BipedStats : ScriptableObject
@@ -11,19 +13,24 @@ public class BipedStats : ScriptableObject
 
     public float movementSpeed = 2;
     public float movementAcceleration = 50;
+    public float movementForce => CalculateMovementForce(movementAcceleration);
     public float standingHeight = 2;
     public float groundDrag = 5;
 
     public float crouchedHeight = 1;
-    public float crouchedSpeedScalar = 0.5f;
-    public float crouchedAccelerationScalar = 0.3f;
+    public float crouchedSpeed = 1;
+    public float crouchedAcceleration = 15;
+    public float crouchedMovementForce => CalculateMovementForce(crouchedAcceleration);
 
     public float jumpHeight = 1;
-    public float airAccelerationScalar = 0.05f;
+    public float jumpVelocity => CalculateJumpVelocity();
+    public float airAcceleration = 2.5f;
+    public float airMovementForce => CalculateMovementForce(airAcceleration);
     public float airDrag = 0;
 
     public float sprintingSpeed = 5;
-    public float sprintingAccelerationScalar = 0.7f;
+    public float sprintingAcceleration = 35;
+    public float sprintForce => CalculateMovementForce(sprintingAcceleration);
     public float sprintMinimumSpeed = 1.75f;
     public float sprintingLateralInputScalar = 0.2f;
     public float sprintingDrag = 5;
@@ -40,4 +47,14 @@ public class BipedStats : ScriptableObject
     public float grabAutomaticReleaseDistance = 5;
     public float grabbedThrowSpeed = 20;
     public float grabbedReleaseMaxSpeed = 20;
+
+    float CalculateMovementForce(float acceleration)
+    {
+        return mass * acceleration;
+    }
+
+    float CalculateJumpVelocity()
+    {
+        return MathF.Sqrt(-2 * Physics.gravity.y * jumpHeight);
+    }
 }

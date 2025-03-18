@@ -13,8 +13,6 @@ public class B_Player : B_Biped
     {
         base.FixedUpdate();
         InteractionStringUIUpdate();
-
-        Debug.Log(rb.velocity.magnitude);
     }
 
     void InteractionStringUIUpdate()

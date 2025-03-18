@@ -33417,34 +33417,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 901eb412059a3fd489019557c6f82cc2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mass: 90
-  headHeight: 0.8
-  lookAngleMax: 90
-  movementSpeed: 2
-  movementAcceleration: 50
-  standingHeight: 2
-  groundDrag: 5
-  crouchedHeight: 1
-  crouchedSpeedScalar: 0.5
-  crouchedAccelerationScalar: 0.3
-  jumpHeight: 1
-  airAccelerationScalar: 0.05
-  airDrag: 0
-  sprintingSpeed: 5
-  sprintingAccelerationScalar: 0.7
-  sprintMinimumSpeed: 1.75
-  sprintingLateralInputScalar: 0.2
-  sprintingDrag: 5
-  groundCheckAdditionalDistance: -0.35
-  interactionSphereCastRadius: 0.1
-  interactionSphereCastDistance: 3
-  grabSpringForceStrength: 50
-  grabTorqueForceStrength: 50
-  grabbedObjectDrag: 30
-  grabbedObjectAngularDrag: 30
-  grabAutomaticReleaseDistance: 5
-  grabbedThrowSpeed: 20
-  grabbedReleaseMaxSpeed: 20
+  stats: {fileID: 11400000, guid: 5d314d3470824e14c98370ad80ddae5c, type: 2}
   layerMasks: {fileID: 11400000, guid: d38d232519685e14d8b7f5229aa59291, type: 2}
   rb: {fileID: 1802499617}
   capsuleCollider: {fileID: 1802499618}
