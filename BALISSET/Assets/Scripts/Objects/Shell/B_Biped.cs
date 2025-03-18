@@ -31,6 +31,7 @@ public class B_Biped : B_Shell
     BipedMovementState defaultMovementState;
     BipedCrouchedState crouchedState;
     BipedFallingState fallingState;
+    BipedSlippingState slippingState;
     BipedSprintingState sprintingState;
 
     BipedNoWeaponState noWeaponState;
@@ -166,6 +167,7 @@ public class B_Biped : B_Shell
         defaultMovementState = new(this);
         crouchedState = new(this);
         fallingState = new(this);
+        slippingState = new(this);
         sprintingState = new(this);
 
         noWeaponState = new(this);
@@ -218,6 +220,23 @@ public class B_Biped : B_Shell
     bool GroundCheck()
     {
         return Physics.SphereCast(transform.position, capsuleCollider.radius * 0.8f, transform.TransformDirection(Vector3.down), out _, capsuleCollider.height / 2 + stats.groundCheckAdditionalDistance);
+    }
+
+    bool SlipCheck() //https://youtu.be/8diXkicKnaM?si=HwlLhHIoVK85EZK_&t=34
+    {
+        RaycastHit SlopeHit;
+
+        if(Physics.SphereCast(transform.position, capsuleCollider.radius * 0.8f, transform.TransformDirection(Vector3.down), out SlopeHit, capsuleCollider.height / 2 + stats.groundCheckAdditionalDistance))
+        {
+            var angle = Vector3.Angle(Vector3.up, SlopeHit.normal);
+            Debug.Log(angle);
+            if (angle > stats.slopeSlipAngle)
+            {
+                Debug.Log("I feel it slipping");
+                return true;
+            }
+        }
+        return false;
     }
     
     void DropWeapon()
@@ -308,6 +327,13 @@ public class B_Biped : B_Shell
         rb.mass = stats.mass;
     }
 
+    void OnCollisionEnter(Collision collision)
+    {
+        //TODO: Slam Damage
+        float DamageForceMinimum;
+
+    }
+
     #endregion
 
     #region State Definitions
@@ -340,6 +366,11 @@ public class B_Biped : B_Shell
             if (!biped.GroundCheck())
             {
                 biped.ChangeMovementState(biped.fallingState);
+            }
+
+            if (biped.SlipCheck())
+            {
+                biped.ChangeMovementState(biped.slippingState);
             }
         }
 
@@ -504,6 +535,48 @@ public class B_Biped : B_Shell
             biped.ChangeMovementState(biped.defaultMovementState);
         }
 
+    }
+
+    class BipedSlippingState : BipedMovementState
+    {
+        public BipedSlippingState(B_Biped Biped) : base(Biped)
+        {
+
+        }
+
+        public override void FixedUpdate()
+        {
+            if (!biped.SlipCheck())
+            {
+                biped.ChangeMovementState(biped.defaultMovementState);
+            }
+
+            if (!biped.GroundCheck())
+            {
+                biped.ChangeMovementState(biped.fallingState);
+            }
+        }
+
+        public override void EnterState()
+        {
+            biped.rb.drag = 0;
+            Debug.Log("SLIPPING");
+        }
+
+        public override void ExitState()
+        {
+            biped.rb.drag = biped.stats.groundDrag;
+        }
+
+        public override void Move() {}
+
+        public override void Crouch() { }
+
+        public override void Sprint() { }
+
+        public override void Jump() { }
+
+        protected override void SpeedCap() { }
     }
 
     // WEAPON STATES //

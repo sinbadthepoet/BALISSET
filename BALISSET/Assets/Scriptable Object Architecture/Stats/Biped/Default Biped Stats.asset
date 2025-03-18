@@ -19,15 +19,16 @@ MonoBehaviour:
   movementAcceleration: 50
   standingHeight: 2
   groundDrag: 5
+  slopeSlipAngle: 35
   crouchedHeight: 1
   crouchedSpeed: 1
   crouchedAcceleration: 15
   jumpHeight: 1
-  airAcceleration: 2.5
+  airAcceleration: 1
   airDrag: 0
   sprintingSpeed: 5
-  sprintingAcceleration: 35
-  sprintMinimumSpeed: 1.75
+  sprintingAcceleration: 100
+  sprintMinimumSpeed: 1
   sprintingLateralInputScalar: 0.2
   sprintingDrag: 5
   groundCheckAdditionalDistance: -0.35

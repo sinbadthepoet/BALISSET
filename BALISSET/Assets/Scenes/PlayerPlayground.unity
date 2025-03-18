@@ -449,7 +449,7 @@ GameObject:
   - component: {fileID: 30790016}
   - component: {fileID: 30790015}
   m_Layer: 6
-  m_Name: Stairs (3)
+  m_Name: Step Height
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -28528,7 +28528,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 384e8a66a4e8c4e458c59d7efa6f3a60, type: 2}
+  - {fileID: 2100000, guid: 6ac7aebaa7c2cbd4cac80ea849df212b, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
