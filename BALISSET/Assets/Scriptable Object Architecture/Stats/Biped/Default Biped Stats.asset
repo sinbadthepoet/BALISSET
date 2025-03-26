@@ -19,7 +19,10 @@ MonoBehaviour:
   movementAcceleration: 50
   standingHeight: 2
   groundDrag: 5
-  slopeSlipAngle: 35
+  slopeSlipAngle: 90
+  stepHeight: 0.41
+  stepMinimumHeight: 0.05
+  stepDepth: 2
   crouchedHeight: 1
   crouchedSpeed: 1
   crouchedAcceleration: 15
@@ -31,7 +34,7 @@ MonoBehaviour:
   sprintMinimumSpeed: 1
   sprintingLateralInputScalar: 0.2
   sprintingDrag: 5
-  groundCheckAdditionalDistance: -0.35
+  groundCheckAdditionalDistance: 0.3
   interactionSphereCastRadius: 0.1
   interactionSphereCastDistance: 3
   grabSpringForceStrength: 50

@@ -1,7 +1,11 @@
 using Cinemachine;
+using Cinemachine.Utility;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Threading;
+using Unity.Collections.LowLevel.Unsafe;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.ProBuilder.Shapes;
@@ -11,7 +15,6 @@ using UnityEngine.ProBuilder.Shapes;
 public class B_Biped : B_Shell
 {
     [SerializeField] BipedStats stats;
-
     [SerializeField] LayerMaskConfig layerMasks;
 
     [SerializeField] [HideInInspector] protected Rigidbody rb;
@@ -21,12 +24,14 @@ public class B_Biped : B_Shell
     [SerializeField] [HideInInspector] Transform heldWeaponViewmodelTransform;
 
     float headPitch;
+    List<ContactPoint> contactPoints;
+    Queue<Vector3> previousVelocities;
 
     BipedMovementState previousMovementState;
     BipedWeaponState previousWeaponState;
 
-    BipedMovementState currentMovementState;
-    BipedWeaponState currentWeaponState;
+    protected BipedMovementState currentMovementState;
+    protected BipedWeaponState currentWeaponState;
 
     BipedMovementState defaultMovementState;
     BipedCrouchedState crouchedState;
@@ -219,7 +224,8 @@ public class B_Biped : B_Shell
 
     bool GroundCheck()
     {
-        return Physics.SphereCast(transform.position, capsuleCollider.radius * 0.8f, transform.TransformDirection(Vector3.down), out _, capsuleCollider.height / 2 + stats.groundCheckAdditionalDistance);
+        var p = transform.TransformPoint(capsuleCollider.center) - transform.up * capsuleCollider.height * 0.5f + transform.up * capsuleCollider.radius;
+        return Physics.SphereCast(p, capsuleCollider.radius * 0.8f, transform.TransformDirection(Vector3.down), out _, stats.groundCheckAdditionalDistance);
     }
 
     bool SlipCheck() //https://youtu.be/8diXkicKnaM?si=HwlLhHIoVK85EZK_&t=34
@@ -229,13 +235,13 @@ public class B_Biped : B_Shell
         if(Physics.SphereCast(transform.position, capsuleCollider.radius * 0.8f, transform.TransformDirection(Vector3.down), out SlopeHit, capsuleCollider.height / 2 + stats.groundCheckAdditionalDistance))
         {
             var angle = Vector3.Angle(Vector3.up, SlopeHit.normal);
-            Debug.Log(angle);
             if (angle > stats.slopeSlipAngle)
             {
-                Debug.Log("I feel it slipping");
+                Debug.Log(angle.ToString());
                 return true;
             }
         }
+
         return false;
     }
     
@@ -254,13 +260,20 @@ public class B_Biped : B_Shell
 
     #endregion
 
-    #region Unity Events
+    #region Unity Messages
 
     protected override void Awake()
     {
         base.Awake();
         CameraHolder = head;
         InitializeStates();
+        contactPoints = new();
+
+        previousVelocities = new();
+        previousVelocities.Enqueue(Vector3.zero);
+        previousVelocities.Enqueue(Vector3.zero);
+        previousVelocities.Enqueue(Vector3.zero);
+        previousVelocities.Enqueue(Vector3.zero);
     }
 
     void Start()
@@ -283,6 +296,9 @@ public class B_Biped : B_Shell
 
         currentMovementState.Move();
         currentWeaponState.InteractionCheck();
+
+        previousVelocities.Enqueue(rb.velocity);
+        previousVelocities.Dequeue();
     }
 
     protected virtual void Reset()
@@ -330,7 +346,53 @@ public class B_Biped : B_Shell
     void OnCollisionEnter(Collision collision)
     {
         //TODO: Slam Damage
-        float DamageForceMinimum;
+        //float DamageForceMinimum;
+    }
+
+    protected float Anglerino;
+
+    private void OnCollisionStay(Collision collision)
+    {
+        //TODO: Seperate Function
+        //TODO: Slopes and Rock Way Fix
+        Vector3 FootPos = transform.TransformPoint(capsuleCollider.center) + -transform.up * (capsuleCollider.height / 2);
+
+        collision.GetContacts(contactPoints);
+        float stepHeight = 0;
+        Vector3 stepPoint = Vector3.zero;
+        bool StepUpFlag = false;
+        Vector3 impulse = Vector3.zero;
+
+        foreach(ContactPoint contact in contactPoints)
+        {
+            //TODO: Player must always be upright. Change this to work purely in local oritentation.
+            var heightOfStep = contact.point.y - FootPos.y;
+            Anglerino = MathF.Round(heightOfStep, 3);
+            var angle = Vector3.Angle(Vector3.up, contact.normal);
+
+            if (heightOfStep < stats.stepMinimumHeight) { continue; }
+
+            //Go through each contact and record the highest step if we find one. Ignore ground and really really low steps.
+            if (heightOfStep <= stats.stepHeight && heightOfStep > stepHeight)
+            {
+                Debug.Log("Stepping");
+                StepUpFlag = true;
+                stepHeight = heightOfStep;
+                stepPoint = contact.point;
+                impulse = contact.impulse;
+            }
+        }
+        if (StepUpFlag)
+        {
+            transform.Translate(transform.up * stepHeight);
+
+            //Restore velocity lost from step impact allegedly.
+            rb.AddForce(previousVelocities.Peek(), ForceMode.VelocityChange);
+        }
+    }
+
+    void OnDrawGizmos()
+    {
 
     }
 
@@ -338,14 +400,16 @@ public class B_Biped : B_Shell
 
     #region State Definitions
 
-    class BipedMovementState
+    protected class BipedMovementState
     {
+        public string Name { get; protected set; }
         protected B_Biped biped;
         protected Func<float> GetMovementForce;
         protected Func<float> GetMovementSpeed;
 
         public BipedMovementState(B_Biped Biped)
         {
+            Name = "Default";
             biped = Biped;
             GetMovementForce = (() => biped.stats.movementForce);
             GetMovementSpeed = (() => biped.stats.movementSpeed);
@@ -383,8 +447,10 @@ public class B_Biped : B_Shell
 
             biped.rb.AddRelativeForce(MovementForce, ForceMode.Force);
             SpeedCap();
+            StepClimb();
         }
 
+        //TODO: Counter Force like Half Life? Limited Speed is kinda cringe.
         protected virtual void SpeedCap()
         {
             var BipedVelocity = biped.rb.velocity;
@@ -395,6 +461,11 @@ public class B_Biped : B_Shell
                 Vector3 CappedVelocity = new Vector3(PlanarVelocity.x, BipedVelocity.y, PlanarVelocity.z);
                 biped.rb.velocity = CappedVelocity;
             }
+        }
+
+        protected virtual void StepClimb()
+        {
+
         }
 
         public virtual void Look()
@@ -431,10 +502,11 @@ public class B_Biped : B_Shell
         }
     }
 
-    class BipedCrouchedState : BipedMovementState
+    protected class BipedCrouchedState : BipedMovementState
     {
         public BipedCrouchedState(B_Biped biped) : base(biped)
         {
+            Name = "Crouched";
             GetMovementForce = (() => biped.stats.crouchedMovementForce);
             GetMovementSpeed = (() => biped.stats.crouchedSpeed);
         }
@@ -456,11 +528,14 @@ public class B_Biped : B_Shell
         }
     }
 
-    class BipedFallingState : BipedMovementState
+    protected class BipedFallingState : BipedMovementState
     {
+        
         public BipedFallingState(B_Biped biped) : base(biped)
         {
+            Name = "Falling";
             GetMovementForce = (() => biped.stats.airMovementForce);
+            GetMovementSpeed = (() => biped.stats.sprintingSpeed);
         }
 
         public override void FixedUpdate()
@@ -487,13 +562,14 @@ public class B_Biped : B_Shell
 
         public override void Jump() {}
 
-        protected override void SpeedCap() {}
+        //protected override void SpeedCap() {}
     }
 
-    class BipedSprintingState : BipedMovementState
+    protected class BipedSprintingState : BipedMovementState
     {
         public BipedSprintingState(B_Biped biped) : base(biped)
         {
+            Name = "Sprinting";
             GetMovementForce = (() => biped.stats.sprintForce);
             GetMovementSpeed = (() => biped.stats.sprintingSpeed);
         }
@@ -537,11 +613,11 @@ public class B_Biped : B_Shell
 
     }
 
-    class BipedSlippingState : BipedMovementState
+    protected class BipedSlippingState : BipedMovementState
     {
         public BipedSlippingState(B_Biped Biped) : base(Biped)
         {
-
+            Name = "Slipping";
         }
 
         public override void FixedUpdate()
@@ -560,7 +636,6 @@ public class B_Biped : B_Shell
         public override void EnterState()
         {
             biped.rb.drag = 0;
-            Debug.Log("SLIPPING");
         }
 
         public override void ExitState()
@@ -570,22 +645,24 @@ public class B_Biped : B_Shell
 
         public override void Move() {}
 
-        public override void Crouch() { }
+        public override void Crouch() {}
 
-        public override void Sprint() { }
+        public override void Sprint() {}
 
-        public override void Jump() { }
+        public override void Jump() {}
 
-        protected override void SpeedCap() { }
+        protected override void SpeedCap() {}
     }
 
     // WEAPON STATES //
-    class BipedWeaponState
+    protected class BipedWeaponState
     {
+        public string Name { get; protected set; }
         protected B_Biped biped;
 
         public BipedWeaponState(B_Biped Biped)
         {
+            Name = "Default";
             biped = Biped;
         }
 
@@ -666,10 +743,11 @@ public class B_Biped : B_Shell
         }
     }
 
-    class BipedNoWeaponState : BipedWeaponState
+    protected class BipedNoWeaponState : BipedWeaponState
     {
         public BipedNoWeaponState(B_Biped Biped) : base(Biped)
         {
+            Name = "No Weapon";
         }
 
         public override void Fire(InputAction.CallbackContext ctx) {}
@@ -681,22 +759,23 @@ public class B_Biped : B_Shell
         public override void Aim(InputAction.CallbackContext ctx) {}
     }
 
-    class BipedAimingState : BipedWeaponState
+    protected class BipedAimingState : BipedWeaponState
     {
         public BipedAimingState(B_Biped Biped) : base(Biped)
         {
+            Name = "Aiming";
         }
     }
 
-    class BipedWeaponLockedState : BipedWeaponState
+    protected class BipedWeaponLockedState : BipedWeaponState
     {
         public BipedWeaponLockedState(B_Biped Biped) : base(Biped)
         {
-
+            Name = "Locked";
         }
     }
 
-    class BipedHoldingPropState : BipedWeaponState
+    protected class BipedHoldingPropState : BipedWeaponState
     {
         //hehe... propstate
         Rigidbody HeldObject;
@@ -705,7 +784,7 @@ public class B_Biped : B_Shell
 
         public BipedHoldingPropState(B_Biped biped) : base(biped)
         {
-
+            Name = "Holding Prop";
         }
 
         public override void EnterState()

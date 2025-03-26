@@ -16,7 +16,11 @@ public class BipedStats : ScriptableObject
     public float movementForce => CalculateMovementForce(movementAcceleration);
     public float standingHeight = 2;
     public float groundDrag = 5;
+
     public float slopeSlipAngle = 45;
+    public float stepHeight = 0.5f;
+    public float stepMinimumHeight = 0.05f;
+    public float stepDepth = 0.1f;
 
     public float crouchedHeight = 1;
     public float crouchedSpeed = 1;

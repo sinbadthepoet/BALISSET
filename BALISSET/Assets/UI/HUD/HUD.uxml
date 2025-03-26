@@ -9,4 +9,5 @@
             <ui:Label tabindex="-1" text="300" parse-escape-sequences="true" display-tooltip-when-elided="true" name="Reserve" />
         </ui:VisualElement>
     </ui:VisualElement>
+    <ui:Label tabindex="-1" parse-escape-sequences="true" display-tooltip-when-elided="true" name="DebugStrings" style="font-size: 32px; position: absolute; left: 10px; bottom: 10px;" />
 </ui:UXML>

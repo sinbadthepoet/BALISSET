@@ -5,6 +5,8 @@ public class HUD : MonoBehaviour
 {
     [SerializeField] StringReference InteractionString;
     Label InteractionLabel;
+    [SerializeField] StringReference DebugStrings;
+    Label DebugLabel;
 
     [SerializeField] IntReference AmmoCount;
     Label AmmoInMagazine;
@@ -22,11 +24,14 @@ public class HUD : MonoBehaviour
         InteractionLabel = uiDocument.rootVisualElement.Q<Label>("Highlight");
         AmmoInMagazine = uiDocument.rootVisualElement.Q<Label>("Loaded");
         ReserveAmmo = uiDocument.rootVisualElement.Q<Label>("Reserve");
+        DebugLabel = uiDocument.rootVisualElement.Q<Label>("DebugStrings");
+
     }
     
     void Update()
     {
         InteractionLabel.text = InteractionString.Value;
+        DebugLabel.text = DebugStrings.Value;
         AmmoInMagazine.text = AmmoCount.Value.ToString();
         ReserveAmmo.text = ReserveCount.Value.ToString();
     }
