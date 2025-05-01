@@ -21,6 +21,7 @@ public class BipedStats : ScriptableObject
     public float stepHeight = 0.5f;
     public float stepMinimumHeight = 0.05f;
     public float stepDepth = 0.1f;
+    public float standingArc = 45.0f; //The angle from the bottom of the sphere that the player can stand on.
 
     public float crouchedHeight = 1;
     public float crouchedSpeed = 1;

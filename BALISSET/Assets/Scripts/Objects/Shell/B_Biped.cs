@@ -224,8 +224,8 @@ public class B_Biped : B_Shell
 
     bool GroundCheck()
     {
-        var p = transform.TransformPoint(capsuleCollider.center) - transform.up * capsuleCollider.height * 0.5f + transform.up * capsuleCollider.radius;
-        return Physics.SphereCast(p, capsuleCollider.radius * 0.8f, transform.TransformDirection(Vector3.down), out _, stats.groundCheckAdditionalDistance);
+        var CapsuleBottomSphereCenter = transform.TransformPoint(capsuleCollider.center) - transform.up * capsuleCollider.height * 0.5f + transform.up * capsuleCollider.radius;
+        return Physics.SphereCast(CapsuleBottomSphereCenter, capsuleCollider.radius * 0.8f, transform.TransformDirection(Vector3.down), out _, stats.groundCheckAdditionalDistance);
     }
 
     bool SlipCheck() //https://youtu.be/8diXkicKnaM?si=HwlLhHIoVK85EZK_&t=34
@@ -256,6 +256,16 @@ public class B_Biped : B_Shell
         }
 
         heldWeapon.rb.AddForce(head.transform.forward * 500);
+    }
+
+    void StepUp()
+    {
+
+    }
+
+    void StepDown()
+    {
+
     }
 
     #endregion
@@ -349,28 +359,53 @@ public class B_Biped : B_Shell
         //float DamageForceMinimum;
     }
 
-    protected float Anglerino;
-
     private void OnCollisionStay(Collision collision)
     {
-        //TODO: Seperate Function
-        //TODO: Slopes and Rock Way Fix
+
         Vector3 FootPos = transform.TransformPoint(capsuleCollider.center) + -transform.up * (capsuleCollider.height / 2);
-
         collision.GetContacts(contactPoints);
-        float stepHeight = 0;
-        Vector3 stepPoint = Vector3.zero;
-        bool StepUpFlag = false;
-        Vector3 impulse = Vector3.zero;
 
+        float StepHeightToClimb = 0;
+        //Step 1: Go through every collision that the capsule is experiencing.
+        foreach(ContactPoint contact in contactPoints)
+        {
+            var heightOfStep = contact.point.y - FootPos.y;
+            //Step 2: Find the step we care about.
+
+            //Is the height within the step height range we care about?
+            if (heightOfStep > stats.stepHeight || heightOfStep < stats.stepMinimumHeight) { continue; }
+
+            //Is is the highest step of the steps I've checked?
+            if(StepHeightToClimb != 0 && heightOfStep < StepHeightToClimb) { continue; }
+
+            StepHeightToClimb = heightOfStep;
+        }
+
+        if(StepHeightToClimb != 0)
+        {
+            //Take the sphere at the bottom of the capsule.
+            //From the center, about 45deg of the bottom of the sphere are fine to stand on.
+            //If we take the radius as a downwards vector, and rotate it 45deg,
+            //we get the height above that part.
+            //Subtract it from the radius, and we get the height of the standable range.
+
+            //Unfactored -> Radius - Radius * 45 Degree rotation on the vertical component.
+            var rangeOfStandingHeight = capsuleCollider.radius * (1 - Mathf.Cos(45 * Mathf.Deg2Rad));
+
+            //Step 3: Raise the player to the correct height
+            var raiseAmount = StepHeightToClimb - rangeOfStandingHeight;
+
+            transform.Translate(Vector3.up * raiseAmount);
+            
+            //Step 4: Move the player in the direction of movement until they are standing on the platform.
+
+        }
+        //Standing Space: A capsule can comfortably stand on about a 45 arc of the bottom sphere.
+
+        /*
         foreach(ContactPoint contact in contactPoints)
         {
             //TODO: Player must always be upright. Change this to work purely in local oritentation.
-            var heightOfStep = contact.point.y - FootPos.y;
-            Anglerino = MathF.Round(heightOfStep, 3);
-            var angle = Vector3.Angle(Vector3.up, contact.normal);
-
-            if (heightOfStep < stats.stepMinimumHeight) { continue; }
 
             //Go through each contact and record the highest step if we find one. Ignore ground and really really low steps.
             if (heightOfStep <= stats.stepHeight && heightOfStep > stepHeight)
@@ -389,6 +424,7 @@ public class B_Biped : B_Shell
             //Restore velocity lost from step impact allegedly.
             rb.AddForce(previousVelocities.Peek(), ForceMode.VelocityChange);
         }
+        */
     }
 
     void OnDrawGizmos()
