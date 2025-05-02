@@ -260,7 +260,89 @@ public class B_Biped : B_Shell
 
     void StepUp()
     {
+        Vector3 FootPos = transform.TransformPoint(capsuleCollider.center) + -transform.up * (capsuleCollider.height / 2);
+        var velocityBeforeCollision = previousVelocities.Peek();
+        Vector3 StepDirection = velocityBeforeCollision.magnitude > 0.1f ? velocityBeforeCollision.normalized : transform.forward;
 
+        Vector3 StepToClimb = Vector3.zero;
+
+        //Step 1: Go through every collision that the capsule is experiencing.
+        foreach (ContactPoint contact in contactPoints)
+        {
+            var thisStep = contact.point - FootPos;
+            //Step 2: Find the step we care about.
+
+            //Is the height within the step height range we care about?
+            if (thisStep.y > stats.stepHeight || thisStep.y < stats.stepMinimumHeight) { continue; }
+
+            //Is the step even in the direction we're going?
+            if(Vector3.Dot(velocityBeforeCollision, thisStep) < 0) { continue; }
+
+            //Is is the highest step of the steps I've checked?
+            if (thisStep.y < StepToClimb.y) { continue; }
+
+            StepToClimb = thisStep;
+        }
+
+        if (StepToClimb == Vector3.zero) { return; }
+
+        //Is there enough room for us?
+        Vector3 bottomCapsuleSpherePoint = transform.TransformPoint(capsuleCollider.center) - transform.up * capsuleCollider.height * 0.5f + transform.up * capsuleCollider.radius;
+        Vector3 topCapsuleSpherePoint = transform.TransformPoint(capsuleCollider.center) + transform.up * capsuleCollider.height * 0.5f - transform.up * capsuleCollider.radius;
+
+        bottomCapsuleSpherePoint += StepToClimb;
+        topCapsuleSpherePoint += StepToClimb;
+
+        //if (Physics.CheckCapsule(bottomCapsuleSpherePoint, topCapsuleSpherePoint, capsuleCollider.radius, layerMasks.groundCheck)) { return; }
+        
+        transform.Translate(StepToClimb, Space.World);
+        rb.velocity = velocityBeforeCollision;
+
+        /*
+
+        //Take the sphere at the bottom of the capsule.
+        //From the center, about 45deg of the bottom of the sphere are fine to stand on.
+        //If we take the radius as a downwards vector, and rotate it 45deg,
+        //we get the height above that part.
+        //Subtract it from the radius, and we get the height of the standable range.
+
+        //Unfactored -> Radius - Radius * 45 Degree rotation on the vertical component.
+        var rangeOfStandingHeight = capsuleCollider.radius * (1 - Mathf.Cos(stats.standingArcConservative * Mathf.Deg2Rad));
+
+        //Step 3: Raise the player to the correct height
+        //By reducing the raise amount by the range of Standing Height, we ensure that the player will hit the edge
+
+        var raiseAmount = StepHeightToClimb - rangeOfStandingHeight;
+        if(raiseAmount < 0)
+        {
+            raiseAmount = 0;
+        }
+
+        //Perform a check to see if we can move the player onto the step.
+        //Find the current capsule position.
+        Vector3 bottomCapsuleSpherePoint = transform.TransformPoint(capsuleCollider.center) - transform.up * capsuleCollider.height * 0.5f + transform.up * capsuleCollider.radius;
+        Vector3 topCapsuleSpherePoint = transform.TransformPoint(capsuleCollider.center) + transform.up * capsuleCollider.height * 0.5f - transform.up * capsuleCollider.radius;
+
+        //Move the check capsule up to the new step height.
+        bottomCapsuleSpherePoint += Vector3.up * raiseAmount;
+        topCapsuleSpherePoint += Vector3.up * raiseAmount;
+
+
+        //Shoot the capsule forward. The hit should occur by the feet. Check.
+        //MAX: Move forward the full radius of the capsule.
+        //MIN: There should be enough space for the capsule. 
+        RaycastHit hitInfo;
+        if (Physics.CapsuleCast(bottomCapsuleSpherePoint, topCapsuleSpherePoint, capsuleCollider.radius, StepDirection, out hitInfo, capsuleCollider.radius, layerMasks.groundCheck))  
+        {
+            Debug.Log("Hit");
+            if(hitInfo.point.y < (bottomCapsuleSpherePoint.y - capsuleCollider.radius + StepHeightToClimb))
+            {
+                Debug.Log("Stepping");
+                //If the capsule in the right spot, move it.
+                transform.Translate(Vector3.up * raiseAmount + StepDirection * hitInfo.distance);
+            }
+        }
+        */
     }
 
     void StepDown()
@@ -361,70 +443,8 @@ public class B_Biped : B_Shell
 
     private void OnCollisionStay(Collision collision)
     {
-
-        Vector3 FootPos = transform.TransformPoint(capsuleCollider.center) + -transform.up * (capsuleCollider.height / 2);
         collision.GetContacts(contactPoints);
-
-        float StepHeightToClimb = 0;
-        //Step 1: Go through every collision that the capsule is experiencing.
-        foreach(ContactPoint contact in contactPoints)
-        {
-            var heightOfStep = contact.point.y - FootPos.y;
-            //Step 2: Find the step we care about.
-
-            //Is the height within the step height range we care about?
-            if (heightOfStep > stats.stepHeight || heightOfStep < stats.stepMinimumHeight) { continue; }
-
-            //Is is the highest step of the steps I've checked?
-            if(StepHeightToClimb != 0 && heightOfStep < StepHeightToClimb) { continue; }
-
-            StepHeightToClimb = heightOfStep;
-        }
-
-        if(StepHeightToClimb != 0)
-        {
-            //Take the sphere at the bottom of the capsule.
-            //From the center, about 45deg of the bottom of the sphere are fine to stand on.
-            //If we take the radius as a downwards vector, and rotate it 45deg,
-            //we get the height above that part.
-            //Subtract it from the radius, and we get the height of the standable range.
-
-            //Unfactored -> Radius - Radius * 45 Degree rotation on the vertical component.
-            var rangeOfStandingHeight = capsuleCollider.radius * (1 - Mathf.Cos(45 * Mathf.Deg2Rad));
-
-            //Step 3: Raise the player to the correct height
-            var raiseAmount = StepHeightToClimb - rangeOfStandingHeight;
-
-            transform.Translate(Vector3.up * raiseAmount);
-            
-            //Step 4: Move the player in the direction of movement until they are standing on the platform.
-
-        }
-        //Standing Space: A capsule can comfortably stand on about a 45 arc of the bottom sphere.
-
-        /*
-        foreach(ContactPoint contact in contactPoints)
-        {
-            //TODO: Player must always be upright. Change this to work purely in local oritentation.
-
-            //Go through each contact and record the highest step if we find one. Ignore ground and really really low steps.
-            if (heightOfStep <= stats.stepHeight && heightOfStep > stepHeight)
-            {
-                Debug.Log("Stepping");
-                StepUpFlag = true;
-                stepHeight = heightOfStep;
-                stepPoint = contact.point;
-                impulse = contact.impulse;
-            }
-        }
-        if (StepUpFlag)
-        {
-            transform.Translate(transform.up * stepHeight);
-
-            //Restore velocity lost from step impact allegedly.
-            rb.AddForce(previousVelocities.Peek(), ForceMode.VelocityChange);
-        }
-        */
+        StepUp();
     }
 
     void OnDrawGizmos()
