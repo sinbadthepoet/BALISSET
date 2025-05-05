@@ -286,63 +286,30 @@ public class B_Biped : B_Shell
 
         if (StepToClimb == Vector3.zero) { return; }
 
-        //Is there enough room for us?
+        //Is there enough room for us???
+        //Disable the player collider for this check
+        capsuleCollider.enabled = false;
+
         Vector3 bottomCapsuleSpherePoint = transform.TransformPoint(capsuleCollider.center) - transform.up * capsuleCollider.height * 0.5f + transform.up * capsuleCollider.radius;
         Vector3 topCapsuleSpherePoint = transform.TransformPoint(capsuleCollider.center) + transform.up * capsuleCollider.height * 0.5f - transform.up * capsuleCollider.radius;
 
-        bottomCapsuleSpherePoint += StepToClimb;
+        bottomCapsuleSpherePoint += StepToClimb + Vector3.up * 0.1f;
         topCapsuleSpherePoint += StepToClimb;
 
-        //if (Physics.CheckCapsule(bottomCapsuleSpherePoint, topCapsuleSpherePoint, capsuleCollider.radius, layerMasks.groundCheck)) { return; }
+        if (Physics.CheckCapsule(bottomCapsuleSpherePoint, topCapsuleSpherePoint, capsuleCollider.radius, layerMasks.groundCheck))
+        {
+            capsuleCollider.enabled = true;
+            return;
+        }
         
+        capsuleCollider.enabled = true;
+
+        //Reduce the step stride, making the step less jarring.
+        StepToClimb.x /= 2;
+        StepToClimb.z /= 2;
+
         transform.Translate(StepToClimb, Space.World);
         rb.velocity = velocityBeforeCollision;
-
-        /*
-
-        //Take the sphere at the bottom of the capsule.
-        //From the center, about 45deg of the bottom of the sphere are fine to stand on.
-        //If we take the radius as a downwards vector, and rotate it 45deg,
-        //we get the height above that part.
-        //Subtract it from the radius, and we get the height of the standable range.
-
-        //Unfactored -> Radius - Radius * 45 Degree rotation on the vertical component.
-        var rangeOfStandingHeight = capsuleCollider.radius * (1 - Mathf.Cos(stats.standingArcConservative * Mathf.Deg2Rad));
-
-        //Step 3: Raise the player to the correct height
-        //By reducing the raise amount by the range of Standing Height, we ensure that the player will hit the edge
-
-        var raiseAmount = StepHeightToClimb - rangeOfStandingHeight;
-        if(raiseAmount < 0)
-        {
-            raiseAmount = 0;
-        }
-
-        //Perform a check to see if we can move the player onto the step.
-        //Find the current capsule position.
-        Vector3 bottomCapsuleSpherePoint = transform.TransformPoint(capsuleCollider.center) - transform.up * capsuleCollider.height * 0.5f + transform.up * capsuleCollider.radius;
-        Vector3 topCapsuleSpherePoint = transform.TransformPoint(capsuleCollider.center) + transform.up * capsuleCollider.height * 0.5f - transform.up * capsuleCollider.radius;
-
-        //Move the check capsule up to the new step height.
-        bottomCapsuleSpherePoint += Vector3.up * raiseAmount;
-        topCapsuleSpherePoint += Vector3.up * raiseAmount;
-
-
-        //Shoot the capsule forward. The hit should occur by the feet. Check.
-        //MAX: Move forward the full radius of the capsule.
-        //MIN: There should be enough space for the capsule. 
-        RaycastHit hitInfo;
-        if (Physics.CapsuleCast(bottomCapsuleSpherePoint, topCapsuleSpherePoint, capsuleCollider.radius, StepDirection, out hitInfo, capsuleCollider.radius, layerMasks.groundCheck))  
-        {
-            Debug.Log("Hit");
-            if(hitInfo.point.y < (bottomCapsuleSpherePoint.y - capsuleCollider.radius + StepHeightToClimb))
-            {
-                Debug.Log("Stepping");
-                //If the capsule in the right spot, move it.
-                transform.Translate(Vector3.up * raiseAmount + StepDirection * hitInfo.distance);
-            }
-        }
-        */
     }
 
     void StepDown()
@@ -393,11 +360,12 @@ public class B_Biped : B_Shell
         previousVelocities.Dequeue();
     }
 
-    protected virtual void Reset()
+    protected override void Reset()
     {
+        base.Reset();
+
         rb = GetComponent<Rigidbody>();
 
-        rb.mass = stats.mass;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
         rb.freezeRotation = true;
         rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
@@ -447,9 +415,16 @@ public class B_Biped : B_Shell
         StepUp();
     }
 
+    Vector3 a = Vector3.zero;
+    Vector3 b = Vector3.zero;
+
     void OnDrawGizmos()
     {
+        Gizmos.DrawWireSphere(a, capsuleCollider.radius);
+        Gizmos.DrawWireSphere(b, capsuleCollider.radius);
 
+        //a = Vector3.zero;
+        //b = Vector3.zero;
     }
 
     #endregion

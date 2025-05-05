@@ -17,7 +17,7 @@ MonoBehaviour:
     m_Bits: 72
   groundCheck:
     serializedVersion: 2
-    m_Bits: 72
+    m_Bits: 73
   damage:
     serializedVersion: 2
     m_Bits: 192

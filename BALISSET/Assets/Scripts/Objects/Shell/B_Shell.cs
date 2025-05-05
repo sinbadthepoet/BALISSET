@@ -78,4 +78,9 @@ public abstract class B_Shell : MonoBehaviour
         if(_Ghost == null) { return; }
         _Ghost.Release();
     }
+
+    protected virtual void Reset()
+    {
+        gameObject.layer = Layers.Shells;
+    }
 }
