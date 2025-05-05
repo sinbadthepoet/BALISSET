@@ -260,6 +260,8 @@ public class B_Biped : B_Shell
 
     void StepUp()
     {
+        //TODO: When you collide with steps diagonally, you snap laterally. Ideally, you should only snap forward.
+
         Vector3 FootPos = transform.TransformPoint(capsuleCollider.center) + -transform.up * (capsuleCollider.height / 2);
         var velocityBeforeCollision = previousVelocities.Peek();
         Vector3 StepDirection = velocityBeforeCollision.magnitude > 0.1f ? velocityBeforeCollision.normalized : transform.forward;
@@ -412,19 +414,12 @@ public class B_Biped : B_Shell
     private void OnCollisionStay(Collision collision)
     {
         collision.GetContacts(contactPoints);
-        StepUp();
+        currentMovementState.OnCollisionStay();
     }
-
-    Vector3 a = Vector3.zero;
-    Vector3 b = Vector3.zero;
 
     void OnDrawGizmos()
     {
-        Gizmos.DrawWireSphere(a, capsuleCollider.radius);
-        Gizmos.DrawWireSphere(b, capsuleCollider.radius);
 
-        //a = Vector3.zero;
-        //b = Vector3.zero;
     }
 
     #endregion
@@ -531,6 +526,12 @@ public class B_Biped : B_Shell
                 biped.ChangeMovementState(biped.sprintingState);
             }
         }
+
+        public virtual void OnCollisionStay()
+        {
+            biped.StepUp();
+            biped.StepDown();
+        }
     }
 
     protected class BipedCrouchedState : BipedMovementState
@@ -561,7 +562,6 @@ public class B_Biped : B_Shell
 
     protected class BipedFallingState : BipedMovementState
     {
-        
         public BipedFallingState(B_Biped biped) : base(biped)
         {
             Name = "Falling";
@@ -593,7 +593,7 @@ public class B_Biped : B_Shell
 
         public override void Jump() {}
 
-        //protected override void SpeedCap() {}
+        public override void OnCollisionStay() {}
     }
 
     protected class BipedSprintingState : BipedMovementState
@@ -681,6 +681,8 @@ public class B_Biped : B_Shell
         public override void Sprint() {}
 
         public override void Jump() {}
+
+        public override void OnCollisionStay() {}
 
         protected override void SpeedCap() {}
     }
