@@ -206,19 +206,19 @@ public class B_Biped : B_Shell
         ShellActions.Add("Aim", new ActionForBinding(Aim, null, ActionType.OnOff));
     }
 
-    void ChangeMovementState(BipedMovementState state)
+    void ChangeMovementState(BipedMovementState newState)
     {
         currentMovementState.ExitState();
         previousMovementState = currentMovementState;
-        currentMovementState = state;
+        currentMovementState = newState;
         currentMovementState.EnterState();
     }
 
-    void ChangeWeaponState(BipedWeaponState state)
+    void ChangeWeaponState(BipedWeaponState newState)
     {
         currentWeaponState.ExitState();
         previousWeaponState = currentWeaponState;
-        currentWeaponState = state;
+        currentWeaponState = newState;
         currentWeaponState.EnterState();
     }
 
@@ -380,7 +380,7 @@ public class B_Biped : B_Shell
             head = new GameObject("Head").transform;
         }
         head.parent = transform;
-        head.localPosition = new Vector3(0, stats.headHeight, 0);
+        //head.localPosition = new Vector3(0, stats.headHeight, 0);
 
         heldWeaponViewmodelTransform = head.Find("Gun Position");
         if (heldWeaponViewmodelTransform == null)
@@ -394,13 +394,14 @@ public class B_Biped : B_Shell
         if (heldObjectPosition == null)
         {
             heldObjectPosition = new GameObject("Physics Grab Position").transform;
-            heldObjectPosition.localPosition = new Vector3(0, -0.8f, 1.5f);
         }
         heldObjectPosition.parent = head;
+        heldObjectPosition.localPosition = new Vector3(0, -0.8f, 1.5f);
     }
 
     void OnValidate()
     {
+        if(head == null || rb == null || stats == null) { return; }
         head.localPosition = new Vector3(0, stats.headHeight, 0);
         rb.mass = stats.mass;
     }
@@ -469,11 +470,16 @@ public class B_Biped : B_Shell
         public virtual void Move()
         {
             Vector2 Input = biped.movementInput.ReadValue<Vector2>();
-            Vector3 MovementForce = new Vector3(Input.x, 0, Input.y) * GetMovementForce.Invoke();
+            Vector3 MovementForce = new Vector3(Input.x, 0, Input.y).normalized * GetMovementForce.Invoke();
 
             biped.rb.AddRelativeForce(MovementForce, ForceMode.Force);
             SpeedCap();
-            StepClimb();
+
+            //Forces
+            // - Movement Force (Keeps us at our constant speed)
+            // - Acceleration Force (Changes our speed)
+            // - Friction (Ground)
+            // - Externally resistive forces (Props)
         }
 
         //TODO: Counter Force like Half Life? Limited Speed is kinda cringe.
@@ -487,11 +493,6 @@ public class B_Biped : B_Shell
                 Vector3 CappedVelocity = new Vector3(PlanarVelocity.x, BipedVelocity.y, PlanarVelocity.z);
                 biped.rb.velocity = CappedVelocity;
             }
-        }
-
-        protected virtual void StepClimb()
-        {
-
         }
 
         public virtual void Look()
@@ -853,6 +854,7 @@ public class B_Biped : B_Shell
         public override void ExitState()
         {
             HeldObject.useGravity = true;
+            HeldObject.interpolation = RigidbodyInterpolation.None;
 
             HeldObject.drag = OriginalDrag;
             OriginalDrag = 1;
