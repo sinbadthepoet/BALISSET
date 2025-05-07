@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -44,7 +45,7 @@ public class B_Player : B_Biped
         debugString.AppendLine($"Weapon State: {currentWeaponState.Name}");
         var planarVel = rb.velocity;
         planarVel.y = 0;
-        debugString.AppendLine($"Velocity: {planarVel.magnitude}");
+        debugString.AppendLine($"Velocity: {MathF.Round(planarVel.magnitude, 3)}");
     }
 
     protected override void Awake()

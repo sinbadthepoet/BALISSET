@@ -109,7 +109,7 @@
                 {
                     "name": "Keyboard",
                     "id": "901d7571-7133-4ec2-a078-4326177823f6",
-                    "path": "2DVector(mode=1)",
+                    "path": "2DVector",
                     "interactions": "",
                     "processors": "",
                     "groups": "",

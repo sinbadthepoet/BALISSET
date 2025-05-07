@@ -402,7 +402,7 @@ public class B_Biped : B_Shell
     void OnValidate()
     {
         if(head == null || rb == null || stats == null) { return; }
-        head.localPosition = new Vector3(0, stats.headHeight, 0);
+        head.localPosition = new Vector3(0, stats.eyeHeight - capsuleCollider.height/2, 0);
         rb.mass = stats.mass;
     }
 
@@ -431,14 +431,14 @@ public class B_Biped : B_Shell
     {
         public string Name { get; protected set; }
         protected B_Biped biped;
-        protected Func<float> GetMovementForce;
+        protected Func<float> GetAccelerationLimit;
         protected Func<float> GetMovementSpeed;
 
         public BipedMovementState(B_Biped Biped)
         {
             Name = "Default";
             biped = Biped;
-            GetMovementForce = (() => biped.stats.movementForce);
+            GetAccelerationLimit = (() => biped.stats.movementAccelerationLimit);
             GetMovementSpeed = (() => biped.stats.movementSpeed);
         }
 
@@ -470,29 +470,21 @@ public class B_Biped : B_Shell
         public virtual void Move()
         {
             Vector2 Input = biped.movementInput.ReadValue<Vector2>();
-            Vector3 MovementForce = new Vector3(Input.x, 0, Input.y).normalized * GetMovementForce.Invoke();
+            Vector3 DesiredVelocity = new Vector3(Input.x, 0, Input.y) * GetMovementSpeed.Invoke();
+
+            Vector3 planarVelocity = biped.transform.InverseTransformDirection(biped.rb.velocity);
+            planarVelocity.y = 0;
+
+            Vector3 RequiredVelocityChange = DesiredVelocity - planarVelocity;
+
+            Vector3 MovementForce = biped.rb.mass * RequiredVelocityChange / Time.fixedDeltaTime;
+
+            if(MovementForce.magnitude > GetAccelerationLimit.Invoke())
+            {
+                MovementForce = MovementForce.normalized * GetAccelerationLimit.Invoke();
+            }
 
             biped.rb.AddRelativeForce(MovementForce, ForceMode.Force);
-            SpeedCap();
-
-            //Forces
-            // - Movement Force (Keeps us at our constant speed)
-            // - Acceleration Force (Changes our speed)
-            // - Friction (Ground)
-            // - Externally resistive forces (Props)
-        }
-
-        //TODO: Counter Force like Half Life? Limited Speed is kinda cringe.
-        protected virtual void SpeedCap()
-        {
-            var BipedVelocity = biped.rb.velocity;
-            Vector3 PlanarVelocity = new Vector3(BipedVelocity.x, 0, BipedVelocity.z);
-            if (PlanarVelocity.magnitude > GetMovementSpeed.Invoke())
-            {
-                PlanarVelocity = PlanarVelocity.normalized * GetMovementSpeed.Invoke();
-                Vector3 CappedVelocity = new Vector3(PlanarVelocity.x, BipedVelocity.y, PlanarVelocity.z);
-                biped.rb.velocity = CappedVelocity;
-            }
         }
 
         public virtual void Look()
@@ -540,7 +532,7 @@ public class B_Biped : B_Shell
         public BipedCrouchedState(B_Biped biped) : base(biped)
         {
             Name = "Crouched";
-            GetMovementForce = (() => biped.stats.crouchedMovementForce);
+            GetAccelerationLimit = (() => biped.stats.crouchedMovementForce);
             GetMovementSpeed = (() => biped.stats.crouchedSpeed);
         }
 
@@ -566,7 +558,7 @@ public class B_Biped : B_Shell
         public BipedFallingState(B_Biped biped) : base(biped)
         {
             Name = "Falling";
-            GetMovementForce = (() => biped.stats.airMovementForce);
+            GetAccelerationLimit = (() => biped.stats.airMovementForce);
             GetMovementSpeed = (() => biped.stats.sprintingSpeed);
         }
 
@@ -602,7 +594,7 @@ public class B_Biped : B_Shell
         public BipedSprintingState(B_Biped biped) : base(biped)
         {
             Name = "Sprinting";
-            GetMovementForce = (() => biped.stats.sprintForce);
+            GetAccelerationLimit = (() => biped.stats.sprintForce);
             GetMovementSpeed = (() => biped.stats.sprintingSpeed);
         }
 
@@ -631,11 +623,22 @@ public class B_Biped : B_Shell
         {
             Vector2 Input = biped.movementInput.ReadValue<Vector2>();
             Input.Scale(new Vector2(biped.stats.sprintingLateralInputScalar, 1));
+            Vector3 DesiredVelocity = new Vector3(Input.x, 0, Input.y) * biped.stats.sprintingSpeed;
 
-            Vector3 MovementForce = new Vector3(Input.x, 0, Input.y) * GetMovementForce.Invoke();
+            Vector3 planarVelocity = biped.transform.InverseTransformDirection(biped.rb.velocity);
+            planarVelocity.y = 0;
+
+            Vector3 RequiredVelocityChange = DesiredVelocity - planarVelocity;
+
+            Vector3 MovementForce = biped.rb.mass * RequiredVelocityChange / Time.fixedDeltaTime;
+
+            if (MovementForce.magnitude > biped.stats.movementAcceleration)
+            {
+                MovementForce = MovementForce.normalized * biped.stats.sprintingAcceleration;
+            }
 
             biped.rb.AddRelativeForce(MovementForce, ForceMode.Force);
-            SpeedCap();
+
         }
 
         public override void Sprint()
@@ -684,8 +687,6 @@ public class B_Biped : B_Shell
         public override void Jump() {}
 
         public override void OnCollisionStay() {}
-
-        protected override void SpeedCap() {}
     }
 
     // WEAPON STATES //

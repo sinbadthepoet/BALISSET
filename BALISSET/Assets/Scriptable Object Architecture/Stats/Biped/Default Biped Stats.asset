@@ -16,9 +16,9 @@ MonoBehaviour:
   headHeight: 0.8
   lookAngleMax: 90
   movementSpeed: 2
-  movementAcceleration: 50
+  movementAcceleration: 1000
   standingHeight: 2
-  groundDrag: 5
+  groundDrag: 0
   slopeSlipAngle: 90
   stepHeight: 0.41
   stepMinimumHeight: 0.05
@@ -30,7 +30,7 @@ MonoBehaviour:
   airAcceleration: 1
   airDrag: 0
   sprintingSpeed: 5
-  sprintingAcceleration: 100
+  sprintingAcceleration: 10000
   sprintMinimumSpeed: 1
   sprintingLateralInputScalar: 0.2
   sprintingDrag: 5
