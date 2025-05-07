@@ -50,6 +50,7 @@ public class B_Biped : B_Shell
     InputAction analogStickLookInput;
 
     RaycastHit interactionCheckHit;
+    RaycastHit floorHit;
     protected IInteractive lookedAtInteractive;
 
     B_Gun heldWeapon;
@@ -225,22 +226,13 @@ public class B_Biped : B_Shell
     bool GroundCheck()
     {
         var CapsuleBottomSphereCenter = transform.TransformPoint(capsuleCollider.center) - transform.up * capsuleCollider.height * 0.5f + transform.up * capsuleCollider.radius;
-        return Physics.SphereCast(CapsuleBottomSphereCenter, capsuleCollider.radius * 0.8f, transform.TransformDirection(Vector3.down), out _, stats.groundCheckAdditionalDistance);
+        return Physics.SphereCast(CapsuleBottomSphereCenter, stats.groundCheckSphereRadius, transform.TransformDirection(Vector3.down), out floorHit, stats.capsuleRadius - stats.groundCheckSphereRadius + stats.groundCheckAdditionalDistance, layerMasks.groundCheck);
     }
 
     bool SlipCheck() //https://youtu.be/8diXkicKnaM?si=HwlLhHIoVK85EZK_&t=34
     {
-        RaycastHit SlopeHit;
-
-        if(Physics.SphereCast(transform.position, capsuleCollider.radius * 0.8f, transform.TransformDirection(Vector3.down), out SlopeHit, capsuleCollider.height / 2 + stats.groundCheckAdditionalDistance))
-        {
-            var angle = Vector3.Angle(Vector3.up, SlopeHit.normal);
-            if (angle > stats.slopeSlipAngle)
-            {
-                Debug.Log(angle.ToString());
-                return true;
-            }
-        }
+        var angle = Vector3.Angle(Vector3.up, floorHit.normal);
+        if (angle > stats.slopeSlipAngle) { return true; }
 
         return false;
     }
@@ -380,7 +372,6 @@ public class B_Biped : B_Shell
             head = new GameObject("Head").transform;
         }
         head.parent = transform;
-        //head.localPosition = new Vector3(0, stats.headHeight, 0);
 
         heldWeaponViewmodelTransform = head.Find("Gun Position");
         if (heldWeaponViewmodelTransform == null)
@@ -420,7 +411,7 @@ public class B_Biped : B_Shell
 
     void OnDrawGizmos()
     {
-
+        //Gizmos.DrawWireSphere(transform.TransformPoint(capsuleCollider.center) - transform.up * capsuleCollider.height * 0.5f + transform.up * capsuleCollider.radius, stats.groundCheckSphereRadius);
     }
 
     #endregion
@@ -431,15 +422,15 @@ public class B_Biped : B_Shell
     {
         public string Name { get; protected set; }
         protected B_Biped biped;
-        protected Func<float> GetAccelerationLimit;
         protected Func<float> GetMovementSpeed;
+        protected Func<float> GetAccelerationLimit;
 
         public BipedMovementState(B_Biped Biped)
         {
             Name = "Default";
             biped = Biped;
-            GetAccelerationLimit = (() => biped.stats.movementAccelerationLimit);
             GetMovementSpeed = (() => biped.stats.movementSpeed);
+            GetAccelerationLimit = (() => biped.stats.movementAccelerationLimit);
         }
 
         public virtual void EnterState()
@@ -459,7 +450,7 @@ public class B_Biped : B_Shell
                 biped.ChangeMovementState(biped.fallingState);
             }
 
-            if (biped.SlipCheck())
+            else if (biped.SlipCheck())
             {
                 biped.ChangeMovementState(biped.slippingState);
             }
@@ -469,7 +460,13 @@ public class B_Biped : B_Shell
 
         public virtual void Move()
         {
+            //TODO: Drag Compensation
+
             Vector2 Input = biped.movementInput.ReadValue<Vector2>();
+            
+            //Don't hit the breaks on an empty input.
+            if(Input == Vector2.zero) { return; }
+
             Vector3 DesiredVelocity = new Vector3(Input.x, 0, Input.y) * GetMovementSpeed.Invoke();
 
             Vector3 planarVelocity = biped.transform.InverseTransformDirection(biped.rb.velocity);
@@ -477,7 +474,15 @@ public class B_Biped : B_Shell
 
             Vector3 RequiredVelocityChange = DesiredVelocity - planarVelocity;
 
+            //make sure the force and the input direction match.
+            //Exit case - Input 0,1 -> 0,0.3 = Trying to go low speed, let drag handle it.
+            //Exit case - Speed 999 = The velocity change would be mega neg to try to slow us down. Don't.
+            //Stay case - Input 0,1 -> 0,-1 = Switching direction.
+            if (Vector2.Dot(new Vector2(RequiredVelocityChange.x, RequiredVelocityChange.z).normalized, Input.normalized) < 0) { return; }
+
             Vector3 MovementForce = biped.rb.mass * RequiredVelocityChange / Time.fixedDeltaTime;
+
+            Debug.Log($"Movement Force: {MovementForce.magnitude} Limit: {GetAccelerationLimit.Invoke()}");
 
             if(MovementForce.magnitude > GetAccelerationLimit.Invoke())
             {
@@ -489,7 +494,6 @@ public class B_Biped : B_Shell
 
         public virtual void Look()
         {
-            //TODO: Figure out Sensitivity Scaling
             Vector2 Input = biped.mouseLookInput.ReadValue<Vector2>();
             Input += biped.analogStickLookInput.ReadValue<Vector2>() * Time.deltaTime;
 
@@ -532,7 +536,7 @@ public class B_Biped : B_Shell
         public BipedCrouchedState(B_Biped biped) : base(biped)
         {
             Name = "Crouched";
-            GetAccelerationLimit = (() => biped.stats.crouchedMovementForce);
+            GetAccelerationLimit = (() => biped.stats.crouchedAccelerationLimit);
             GetMovementSpeed = (() => biped.stats.crouchedSpeed);
         }
 
@@ -558,7 +562,7 @@ public class B_Biped : B_Shell
         public BipedFallingState(B_Biped biped) : base(biped)
         {
             Name = "Falling";
-            GetAccelerationLimit = (() => biped.stats.airMovementForce);
+            GetAccelerationLimit = (() => biped.stats.movementAccelerationLimit);
             GetMovementSpeed = (() => biped.stats.sprintingSpeed);
         }
 
@@ -594,7 +598,7 @@ public class B_Biped : B_Shell
         public BipedSprintingState(B_Biped biped) : base(biped)
         {
             Name = "Sprinting";
-            GetAccelerationLimit = (() => biped.stats.sprintForce);
+            GetAccelerationLimit = (() => biped.stats.sprintingAccelerationLimit);
             GetMovementSpeed = (() => biped.stats.sprintingSpeed);
         }
 
@@ -632,9 +636,9 @@ public class B_Biped : B_Shell
 
             Vector3 MovementForce = biped.rb.mass * RequiredVelocityChange / Time.fixedDeltaTime;
 
-            if (MovementForce.magnitude > biped.stats.movementAcceleration)
+            //if (MovementForce.magnitude > biped.stats.movementAcceleration)
             {
-                MovementForce = MovementForce.normalized * biped.stats.sprintingAcceleration;
+                //MovementForce = MovementForce.normalized * biped.stats.sprintingAcceleration;
             }
 
             biped.rb.AddRelativeForce(MovementForce, ForceMode.Force);

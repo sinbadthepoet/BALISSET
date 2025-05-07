@@ -12,29 +12,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 109513ad3e4f0ec42a6f93706150d561, type: 3}
   m_Name: Default Biped Stats
   m_EditorClassIdentifier: 
+  standingHeight: 1.83
+  eyeHeight: 1.7
   mass: 90
-  headHeight: 0.8
-  lookAngleMax: 90
+  capsuleRadius: 0.5
   movementSpeed: 2
-  movementAcceleration: 1000
-  standingHeight: 2
-  groundDrag: 0
-  slopeSlipAngle: 90
-  stepHeight: 0.41
+  movementAccelerationTime: 1
+  movementAccelerationLimit: 906.1053
+  groundDrag: 5
+  groundCheckSphereRadius: 0.49
+  groundCheckAdditionalDistance: 0.01
+  slopeSlipAngle: 45
+  stepHeight: 0.5
   stepMinimumHeight: 0.05
-  stepDepth: 2
-  crouchedHeight: 1
+  stepDownDistance: 1
+  lookAngleMax: 90
+  crouchedHeight: 1.42
   crouchedSpeed: 1
-  crouchedAcceleration: 15
-  jumpHeight: 1
-  airAcceleration: 1
-  airDrag: 0
+  crouchedAccelerationTime: 1
+  crouchedAccelerationLimit: 453.05264
+  crouchedDrag: 5
   sprintingSpeed: 5
-  sprintingAcceleration: 10000
-  sprintMinimumSpeed: 1
-  sprintingLateralInputScalar: 0.2
+  sprintMinimumSpeed: 1.75
+  sprintingAccelerationTime: 1
+  sprintingAccelerationLimit: 2265.2632
   sprintingDrag: 5
-  groundCheckAdditionalDistance: 0.3
+  sprintingLateralInputScalar: 0.2
+  jumpHeight: 1
+  jumpVelocity: 4.429447
+  airDrag: 0
   interactionSphereCastRadius: 0.1
   interactionSphereCastDistance: 3
   grabSpringForceStrength: 50

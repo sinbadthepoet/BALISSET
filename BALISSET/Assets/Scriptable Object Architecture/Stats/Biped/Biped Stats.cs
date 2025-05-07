@@ -11,6 +11,7 @@ public class BipedStats : ScriptableObject
     public float standingHeight = 1.83f;
     public float eyeHeight = 1.70f;
     public float mass = 90.0f;
+    public float capsuleRadius = 0.5f;
 
     [Header("Movement")]
     public float movementSpeed = 2;
@@ -19,7 +20,8 @@ public class BipedStats : ScriptableObject
     public float groundDrag = 5;
 
     [Header("Ground Checking")]
-    public float groundCheckAdditionalDistance = 0;
+    public float groundCheckSphereRadius = 0.49f;
+    public float groundCheckAdditionalDistance = 0.01f;
 
     [Header("Slipping")]
     public float slopeSlipAngle = 45;
@@ -39,6 +41,7 @@ public class BipedStats : ScriptableObject
     public float crouchedSpeed = 1;
     public float crouchedAccelerationTime = 1;
     [HideInInspector] public float crouchedAccelerationLimit = 1;
+    public float crouchedDrag = 5;
 
     [Header("Sprinting")]
     public float sprintingSpeed = 5;
@@ -69,15 +72,16 @@ public class BipedStats : ScriptableObject
 
     void OnValidate()
     {
-        movementAccelerationLimit = CalculateAccelerationLimit(movementSpeed, movementAccelerationTime);
-        crouchedAccelerationLimit = CalculateAccelerationLimit(crouchedSpeed, crouchedAccelerationTime);
-        sprintingAccelerationLimit = CalculateAccelerationLimit(sprintingSpeed, sprintingAccelerationTime);
+        movementAccelerationLimit = CalculateAccelerationLimit(movementSpeed, movementAccelerationTime, groundDrag);
+        crouchedAccelerationLimit = CalculateAccelerationLimit(crouchedSpeed, crouchedAccelerationTime, crouchedDrag);
+        sprintingAccelerationLimit = CalculateAccelerationLimit(sprintingSpeed, sprintingAccelerationTime, sprintingDrag);
 
         jumpVelocity = MathF.Sqrt(-2 * Physics.gravity.y * jumpHeight);
     }
 
-    float CalculateAccelerationLimit(float v, float t)
+    float CalculateAccelerationLimit(float v, float t, float drag)
     {
-        return mass * (v / t);
+        if (drag <= 0) return mass * (v / t);
+        else return (mass * drag * v) / (1 - Mathf.Exp(-drag * t));
     }
 }
