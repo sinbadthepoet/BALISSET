@@ -17,9 +17,10 @@ MonoBehaviour:
   mass: 90
   capsuleRadius: 0.5
   movementSpeed: 2
-  movementAccelerationTime: 1
-  movementAccelerationLimit: 906.1053
-  groundDrag: 5
+  movementAccelerationTime: 0.3
+  movementAccelerationLimit: 600
+  movementDecelerationTime: 0.2
+  movementDecelerationLimit: 900
   groundCheckSphereRadius: 0.49
   groundCheckAdditionalDistance: 0.01
   slopeSlipAngle: 45
@@ -30,17 +31,14 @@ MonoBehaviour:
   crouchedHeight: 1.42
   crouchedSpeed: 1
   crouchedAccelerationTime: 1
-  crouchedAccelerationLimit: 453.05264
-  crouchedDrag: 5
+  crouchedAccelerationLimit: 90
   sprintingSpeed: 5
   sprintMinimumSpeed: 1.75
   sprintingAccelerationTime: 1
-  sprintingAccelerationLimit: 2265.2632
-  sprintingDrag: 5
+  sprintingAccelerationLimit: 450
   sprintingLateralInputScalar: 0.2
   jumpHeight: 1
   jumpVelocity: 4.429447
-  airDrag: 0
   interactionSphereCastRadius: 0.1
   interactionSphereCastDistance: 3
   grabSpringForceStrength: 50

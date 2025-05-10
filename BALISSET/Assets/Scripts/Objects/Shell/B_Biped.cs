@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using Unity.Collections.LowLevel.Unsafe;
+using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -363,6 +364,7 @@ public class B_Biped : B_Shell
         rb.interpolation = RigidbodyInterpolation.Interpolate;
         rb.freezeRotation = true;
         rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+        rb.drag = 0;
 
         capsuleCollider = GetComponent<CapsuleCollider>();
 
@@ -411,7 +413,7 @@ public class B_Biped : B_Shell
 
     void OnDrawGizmos()
     {
-        //Gizmos.DrawWireSphere(transform.TransformPoint(capsuleCollider.center) - transform.up * capsuleCollider.height * 0.5f + transform.up * capsuleCollider.radius, stats.groundCheckSphereRadius);
+
     }
 
     #endregion
@@ -424,6 +426,7 @@ public class B_Biped : B_Shell
         protected B_Biped biped;
         protected Func<float> GetMovementSpeed;
         protected Func<float> GetAccelerationLimit;
+        protected Func<float> GetDecelerationLimit;
 
         public BipedMovementState(B_Biped Biped)
         {
@@ -431,11 +434,11 @@ public class B_Biped : B_Shell
             biped = Biped;
             GetMovementSpeed = (() => biped.stats.movementSpeed);
             GetAccelerationLimit = (() => biped.stats.movementAccelerationLimit);
+            GetDecelerationLimit = (() => biped.stats.movementDecelerationLimit);
         }
 
         public virtual void EnterState()
         {
-            biped.rb.drag = biped.stats.groundDrag;
             biped.capsuleCollider.height = biped.stats.standingHeight;
         }
 
@@ -455,17 +458,11 @@ public class B_Biped : B_Shell
                 biped.ChangeMovementState(biped.slippingState);
             }
         }
-
+        
         //ACTIONS
-
         public virtual void Move()
         {
-            //TODO: Drag Compensation
-
             Vector2 Input = biped.movementInput.ReadValue<Vector2>();
-            
-            //Don't hit the breaks on an empty input.
-            if(Input == Vector2.zero) { return; }
 
             Vector3 DesiredVelocity = new Vector3(Input.x, 0, Input.y) * GetMovementSpeed.Invoke();
 
@@ -474,19 +471,23 @@ public class B_Biped : B_Shell
 
             Vector3 RequiredVelocityChange = DesiredVelocity - planarVelocity;
 
-            //make sure the force and the input direction match.
-            //Exit case - Input 0,1 -> 0,0.3 = Trying to go low speed, let drag handle it.
-            //Exit case - Speed 999 = The velocity change would be mega neg to try to slow us down. Don't.
-            //Stay case - Input 0,1 -> 0,-1 = Switching direction.
-            if (Vector2.Dot(new Vector2(RequiredVelocityChange.x, RequiredVelocityChange.z).normalized, Input.normalized) < 0) { return; }
-
             Vector3 MovementForce = biped.rb.mass * RequiredVelocityChange / Time.fixedDeltaTime;
 
-            Debug.Log($"Movement Force: {MovementForce.magnitude} Limit: {GetAccelerationLimit.Invoke()}");
+            float ForceLimit;
 
-            if(MovementForce.magnitude > GetAccelerationLimit.Invoke())
+            //Do we want to decelerate?
+            if (Vector2.Dot(new Vector2(RequiredVelocityChange.x, RequiredVelocityChange.z), Input) < 0 || Input == Vector2.zero)
             {
-                MovementForce = MovementForce.normalized * GetAccelerationLimit.Invoke();
+                ForceLimit = GetDecelerationLimit.Invoke();
+            }
+            else
+            {
+                ForceLimit = GetAccelerationLimit.Invoke();
+            }
+
+            if(MovementForce.magnitude > ForceLimit)
+            {
+                MovementForce = MovementForce.normalized * ForceLimit;
             }
 
             biped.rb.AddRelativeForce(MovementForce, ForceMode.Force);
@@ -536,8 +537,8 @@ public class B_Biped : B_Shell
         public BipedCrouchedState(B_Biped biped) : base(biped)
         {
             Name = "Crouched";
-            GetAccelerationLimit = (() => biped.stats.crouchedAccelerationLimit);
             GetMovementSpeed = (() => biped.stats.crouchedSpeed);
+            GetAccelerationLimit = (() => biped.stats.crouchedAccelerationLimit);
         }
 
         public override void EnterState()
@@ -562,8 +563,9 @@ public class B_Biped : B_Shell
         public BipedFallingState(B_Biped biped) : base(biped)
         {
             Name = "Falling";
-            GetAccelerationLimit = (() => biped.stats.movementAccelerationLimit);
             GetMovementSpeed = (() => biped.stats.sprintingSpeed);
+            GetAccelerationLimit = (() => biped.stats.movementAccelerationLimit);
+            GetDecelerationLimit = (() => 0);
         }
 
         public override void FixedUpdate()
@@ -576,12 +578,10 @@ public class B_Biped : B_Shell
 
         public override void EnterState()
         {
-            biped.rb.drag = biped.stats.airDrag;
         }
 
         public override void ExitState()
         {
-            biped.rb.drag = biped.stats.groundDrag;
         }
 
         public override void Crouch() {}
@@ -598,18 +598,16 @@ public class B_Biped : B_Shell
         public BipedSprintingState(B_Biped biped) : base(biped)
         {
             Name = "Sprinting";
-            GetAccelerationLimit = (() => biped.stats.sprintingAccelerationLimit);
             GetMovementSpeed = (() => biped.stats.sprintingSpeed);
+            GetAccelerationLimit = (() => biped.stats.sprintingAccelerationLimit);
         }
 
         public override void EnterState()
         {
-            biped.rb.drag = biped.stats.sprintingDrag;
         }
 
         public override void ExitState()
         {
-            biped.rb.drag = biped.stats.groundDrag;
         }
 
         public override void Update()
@@ -674,12 +672,10 @@ public class B_Biped : B_Shell
 
         public override void EnterState()
         {
-            biped.rb.drag = 0;
         }
 
         public override void ExitState()
         {
-            biped.rb.drag = biped.stats.groundDrag;
         }
 
         public override void Move() {}

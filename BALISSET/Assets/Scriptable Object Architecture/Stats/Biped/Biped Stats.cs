@@ -17,7 +17,8 @@ public class BipedStats : ScriptableObject
     public float movementSpeed = 2;
     public float movementAccelerationTime = 1;
     [HideInInspector] public float movementAccelerationLimit = 1;
-    public float groundDrag = 5;
+    public float movementDecelerationTime = 1;
+    [HideInInspector] public float movementDecelerationLimit = 1;
 
     [Header("Ground Checking")]
     public float groundCheckSphereRadius = 0.49f;
@@ -41,21 +42,18 @@ public class BipedStats : ScriptableObject
     public float crouchedSpeed = 1;
     public float crouchedAccelerationTime = 1;
     [HideInInspector] public float crouchedAccelerationLimit = 1;
-    public float crouchedDrag = 5;
 
     [Header("Sprinting")]
     public float sprintingSpeed = 5;
     public float sprintMinimumSpeed = 1.75f;
     public float sprintingAccelerationTime = 1;
     [HideInInspector] public float sprintingAccelerationLimit = 1;
-    public float sprintingDrag = 5;
     public float sprintingLateralInputScalar = 0.2f;
 
     [Header("Jumping")]
     public float jumpHeight = 1;
     [HideInInspector] public float jumpVelocity;
     //public float airAcceleration = 2.5f;
-    public float airDrag = 0;
 
     [Header("Interaction")]
     public float interactionSphereCastRadius = 0.1f;
@@ -72,16 +70,18 @@ public class BipedStats : ScriptableObject
 
     void OnValidate()
     {
-        movementAccelerationLimit = CalculateAccelerationLimit(movementSpeed, movementAccelerationTime, groundDrag);
-        crouchedAccelerationLimit = CalculateAccelerationLimit(crouchedSpeed, crouchedAccelerationTime, crouchedDrag);
-        sprintingAccelerationLimit = CalculateAccelerationLimit(sprintingSpeed, sprintingAccelerationTime, sprintingDrag);
+        movementAccelerationLimit = CalculateAccelerationLimit(movementSpeed, movementAccelerationTime);
+        crouchedAccelerationLimit = CalculateAccelerationLimit(crouchedSpeed, crouchedAccelerationTime);
+        sprintingAccelerationLimit = CalculateAccelerationLimit(sprintingSpeed, sprintingAccelerationTime);
+
+        movementDecelerationLimit = CalculateAccelerationLimit(movementSpeed, movementDecelerationTime);
 
         jumpVelocity = MathF.Sqrt(-2 * Physics.gravity.y * jumpHeight);
     }
 
-    float CalculateAccelerationLimit(float v, float t, float drag)
+    float CalculateAccelerationLimit(float v, float t)
     {
-        if (drag <= 0) return mass * (v / t);
-        else return (mass * drag * v) / (1 - Mathf.Exp(-drag * t));
+        if (t == 0) t = float.MinValue;
+        return mass * (v / t);
     }
 }
